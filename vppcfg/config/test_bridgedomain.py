@@ -12,7 +12,7 @@
 # limitations under the License.
 #
 # -*- coding: utf-8 -*-
-""" Unit tests for bridgedomains """
+"""Unit tests for bridgedomains"""
 import unittest
 import yaml
 from . import bridgedomain

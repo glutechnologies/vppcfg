@@ -12,7 +12,7 @@
 # limitations under the License.
 #
 # -*- coding: utf-8 -*-
-""" Unit tests for interfaces """
+"""Unit tests for interfaces"""
 import unittest
 import yaml
 from . import interface

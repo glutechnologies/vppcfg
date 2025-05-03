@@ -1,4 +1,4 @@
-""" module to help locate unittest resources """
+"""module to help locate unittest resources"""
 
 #!/usr/bin/env python
 #

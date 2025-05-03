@@ -12,7 +12,7 @@
 # limitations under the License.
 #
 # -*- coding: utf-8 -*-
-""" Unit tests for vxlan_tunnels """
+"""Unit tests for vxlan_tunnels"""
 import unittest
 import yaml
 from . import vxlan_tunnel

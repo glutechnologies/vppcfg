@@ -12,7 +12,7 @@
 # limitations under the License.
 #
 # -*- coding: utf-8 -*-
-""" Unit tests for addresses """
+"""Unit tests for addresses"""
 import unittest
 import yaml
 from . import address

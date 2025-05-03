@@ -12,7 +12,7 @@
 # limitations under the License.
 #
 # -*- coding: utf-8 -*-
-""" Unit tests for MAC addresses """
+"""Unit tests for MAC addresses"""
 import unittest
 from . import mac
 

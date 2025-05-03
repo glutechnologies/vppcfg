@@ -12,7 +12,7 @@
 # limitations under the License.
 #
 # -*- coding: utf-8 -*-
-""" Unit tests for taps """
+"""Unit tests for taps"""
 import unittest
 import yaml
 from . import prefixlist

@@ -12,7 +12,7 @@
 # limitations under the License.
 #
 # -*- coding: utf-8 -*-
-""" Unit tests for bondethernet """
+"""Unit tests for bondethernet"""
 import unittest
 import yaml
 from . import bondethernet

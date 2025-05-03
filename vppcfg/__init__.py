@@ -13,4 +13,4 @@
 # limitations under the License.
 #
 # -*- coding: utf-8 -*-
-""" __init__.py added to suppress pylint error """
+"""__init__.py added to suppress pylint error"""

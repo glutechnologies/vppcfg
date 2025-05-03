@@ -12,7 +12,7 @@
 # limitations under the License.
 #
 # -*- coding: utf-8 -*-
-""" Unit tests for LCPs """
+"""Unit tests for LCPs"""
 import unittest
 import yaml
 from . import lcp

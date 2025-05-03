@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-""" A vppcfg configuration module that validates interfaces """
+"""A vppcfg configuration module that validates interfaces"""
 import logging
 from . import bondethernet
 from . import bridgedomain

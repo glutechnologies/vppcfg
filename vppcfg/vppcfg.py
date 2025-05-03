@@ -14,7 +14,7 @@
 #
 # -*- coding: utf-8 -*-
 """vppcfg is a utility to configure a running VPP Dataplane using YAML
-config files. See http://github.com/pimvanpelt/vppcfg/README.md for details. """
+config files. See http://github.com/pimvanpelt/vppcfg/README.md for details."""
 # pylint: disable=duplicate-code
 import os
 import sys

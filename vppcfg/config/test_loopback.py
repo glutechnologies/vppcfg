@@ -12,7 +12,7 @@
 # limitations under the License.
 #
 # -*- coding: utf-8 -*-
-""" Unit tests for loopbacks """
+"""Unit tests for loopbacks"""
 import unittest
 import yaml
 from . import loopback

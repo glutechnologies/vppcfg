@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-""" A vppcfg configuration module that handles bondethernets """
+"""A vppcfg configuration module that handles bondethernets"""
 import logging
 from . import interface
 from . import mac

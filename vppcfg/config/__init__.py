@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 # -*- coding: utf-8 -*-
-""" A vppcfg configuration module that exposes its semantic/syntax validators """
+"""A vppcfg configuration module that exposes its semantic/syntax validators"""
 from __future__ import (
     absolute_import,
     division,

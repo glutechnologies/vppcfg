@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 # -*- coding: utf-8 -*-
-""" This is a unit test suite for vppcfg """
+"""This is a unit test suite for vppcfg"""
 # pylint: disable=duplicate-code
 import os
 import sys
