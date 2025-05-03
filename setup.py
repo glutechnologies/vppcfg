@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="vppcfg",
-    version="0.0.7",
+    version="0.0.8",
     install_requires=[
         "requests",
         'importlib-metadata; python_version >= "3.8"',

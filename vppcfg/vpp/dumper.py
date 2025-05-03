@@ -123,6 +123,7 @@ class Dumper(VPPApi):
                     "bond",
                     "VXLAN",
                     "dpdk",
+                    "af-packet",
                     "virtio",
                     "pg",
                 ]:
@@ -155,7 +156,7 @@ class Dumper(VPPApi):
                         i["state"] = "down"
 
                     if (
-                        iface.interface_dev_type == "dpdk"
+                        iface.interface_dev_type in ["dpdk", "af-packet"]
                         and iface.sub_number_of_tags == 0
                     ):
                         i["mac"] = str(iface.l2_address)
@@ -193,6 +194,10 @@ class Dumper(VPPApi):
                     config["interfaces"][sup_iface.interface_name]["sub-interfaces"][
                         iface.sub_id
                     ] = i
+        if iface.interface_dev_type in ["dpdk", "af-packet"]:
+            config["interfaces"][iface.interface_name][
+                "device-type"
+            ] = iface.interface_dev_type
 
         for idx, iface in self.cache["vxlan_tunnels"].items():
             vpp_iface = self.cache["interfaces"][iface.sw_if_index]
@@ -304,9 +309,9 @@ class Dumper(VPPApi):
                             acl_rule.srcport_or_icmptype_first
                         )
                     else:
-                        config_term["icmp-type"] = (
-                            f"{acl_rule.srcport_or_icmptype_first}-{maxval}"
-                        )
+                        config_term[
+                            "icmp-type"
+                        ] = f"{acl_rule.srcport_or_icmptype_first}-{maxval}"
 
                     maxval = acl_rule.dstport_or_icmpcode_last
                     if maxval > 255:
@@ -319,9 +324,9 @@ class Dumper(VPPApi):
                             acl_rule.dstport_or_icmpcode_first
                         )
                     else:
-                        config_term["icmp-code"] = (
-                            f"{acl_rule.dstport_or_icmpcode_first}-{maxval}"
-                        )
+                        config_term[
+                            "icmp-code"
+                        ] = f"{acl_rule.dstport_or_icmpcode_first}-{maxval}"
                 elif acl_rule.proto in [6, 17]:
                     if acl_rule.proto == 6:
                         config_term["protocol"] = "tcp"
@@ -335,9 +340,9 @@ class Dumper(VPPApi):
                             acl_rule.srcport_or_icmptype_first
                         )
                     else:
-                        config_term["source-port"] = (
-                            f"{acl_rule.srcport_or_icmptype_first}-{acl_rule.srcport_or_icmptype_last}"
-                        )
+                        config_term[
+                            "source-port"
+                        ] = f"{acl_rule.srcport_or_icmptype_first}-{acl_rule.srcport_or_icmptype_last}"
                     if (
                         acl_rule.dstport_or_icmpcode_first
                         == acl_rule.dstport_or_icmpcode_last
@@ -346,9 +351,9 @@ class Dumper(VPPApi):
                             acl_rule.dstport_or_icmpcode_first
                         )
                     else:
-                        config_term["destination-port"] = (
-                            f"{acl_rule.dstport_or_icmpcode_first}-{acl_rule.dstport_or_icmpcode_last}"
-                        )
+                        config_term[
+                            "destination-port"
+                        ] = f"{acl_rule.dstport_or_icmpcode_first}-{acl_rule.dstport_or_icmpcode_last}"
                 else:
                     config_term["protocol"] = int(acl_rule.proto)
 
