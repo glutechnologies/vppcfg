@@ -11,7 +11,7 @@ If you're interested in helping, reach out to &lt;pim at ipng dot ch&gt; to disc
 ## Building
 
 This program expects Python3 and PIP to be installed. It's known to work on Debian Bullseye and
-Ubuntu Focal/Jammy.
+Bookworm, as well as on Ubuntu Focal, Jammy and Noble.
 
 ```
 ## Install python build dependencies 
@@ -25,10 +25,6 @@ $ make build
 
 ## Install the tool with PIP
 $ make install
-
-## To build & install debian packaging
-$ make pkg-deb
-$ ls -l ../vppcfg_*_amd64.deb
 ```
 
 ## Running
@@ -66,7 +62,7 @@ Developer deep-dives:
 
 ## Licensing
 
-The code in this project is release under Apache 2.0 license. A copy of the license
+The code in this project is released under Apache 2.0 license. A copy of the license
 is provided in this repo [here](LICENSE). All contributions are held against our
 [contributing](docs/contributing.md) guidelines. Notably, all code must be licensed
 Apache 2.0, and all contributions must come with a certificate of origin in the
