@@ -16,7 +16,7 @@ build:
 
 .PHONY: install-deps
 install-deps:
-	sudo $(PIP) install $(PIP_DEPENDS)
+	$(PIP) install $(PIP_DEPENDS)
 
 .PHONY: install
 install:

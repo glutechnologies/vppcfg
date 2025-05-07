@@ -14,6 +14,11 @@ This program expects Python3 and PIP to be installed. It's known to work on Debi
 Bookworm, as well as on Ubuntu Focal, Jammy and Noble.
 
 ```
+
+## Start a Virtual Environment
+python3 -m venv .venv
+source .venv/bin/activate
+
 ## Install python build dependencies 
 $ make install-deps
 
@@ -22,6 +27,9 @@ $ make test
 
 ## Build vppcfg
 $ make build
+
+## Exit the virtual environment
+$ deactivate
 
 ## Install the tool with PIP
 $ make install
