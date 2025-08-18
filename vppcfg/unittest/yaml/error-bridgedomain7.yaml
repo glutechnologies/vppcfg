@@ -10,9 +10,6 @@ interfaces:
     mtu: 3000
   GigabitEthernet1/0/1:
     mtu: 3000
-
-  GigabitEthernet1/0/1:
-    mtu: 3000
     l2xc: GigabitEthernet1/0/0
 
 bridgedomains:

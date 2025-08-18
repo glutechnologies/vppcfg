@@ -47,7 +47,7 @@ interfaces:
     mtu: 3000
     description: "Cannot be unnumbered off of a bond-member"
     unnumbered: GigabitEthernet3/0/0
-  GigabitEthernet4/0/0:
+  GigabitEthernet4/0/1:
     mtu: 2000
     description: "Cannot be unnumbered off of an l2xc"
     unnumbered: GigabitEthernet3/0/2
