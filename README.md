@@ -59,13 +59,13 @@ Please see vppcfg <command> -h   for per-command arguments
 ## Documentation
 
 Main user-focused documentation:
-*   [YAML Configuration Guide](docs/config-guide.md)
-*   [User Guide](docs/user-guide.md)
+*   [YAML Configuration Guide](https://git.ipng.ch/ipng/vppcfg/src/branch/main/docs/config-guide.md)
+*   [User Guide](https://git.ipng.ch/ipng/vppcfg/src/branch/main/docs/user-guide.md)
 
 Developer deep-dives:
 *   [Validation](https://ipng.ch/s/articles/2022/03/27/vppcfg-1.html)
 *   [Path Planning](https://ipng.ch/s/articles/2022/04/02/vppcfg-2.html)
-*   [Design - Reconciliation](docs/design.md)
+*   [Design - Reconciliation](https://git.ipng.ch/ipng/vppcfg/src/branch/main/docs/design.md)
 
 
 ## Licensing
