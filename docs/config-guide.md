@@ -171,10 +171,22 @@ BondEthernets are required to be named `BondEthernetN` (note the camelcase) wher
 *   ***load-balance***: A loadbalancing strategy to use, if the mode is either XOR or LACP.
     Can be one of 'l2', 'l23', or 'l34'. The default is l34, which hashes on the source and
     destination IPs and ports.
+*   ***mac***: the MAC address assigned to the bondethernet device. At creation time, an ephemeral,
+    address is chosen; then once the first interface is added, the MAC address from that phy
+    overwrites the bondethernet address. To avoid that, you can hard-code it here.
 
 Note that the configuration object here only specifies the link aggregation and its members.
 BondEthernets are expected to occur as well in the `interfaces` section, where their sub-interfaces
 and IP addresses and so on are specified.
+
+There's a notable interaction with Linux Control Plane: When _LIP_ is created, VPP will copy
+the MAC address that is present at that time. This means that the order of operations matters:
+1.  Create the BondEthernet -- an ephemeral MAC is chosen
+1.  Add the first member interface -- the MAC for the BondEthernet is changed to that of the member
+1.  Create the Linux Controlplane Pair -- the resulting Linux interface will now have the same MAC
+    as the dataplane BondEthernet device.
+
+When using Linux Control Plane, you **MUST** set the intended MAC address at creation time.
 
 Examples:
 ```
@@ -184,6 +196,7 @@ bondethernets:
     interfaces: [ GigabitEthernet1/0/0, GigabitEthernet1/0/1 ]
     mode: lacp
     load-balance: l2
+    mac: '64:9d:99:b1:31:db'
   BondEthernet1:
     description: "Core: RR LAG"
     interfaces: [ GigabitEthernet3/0/0, GigabitEthernet3/0/1 ]
