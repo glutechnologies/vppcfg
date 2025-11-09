@@ -41,18 +41,14 @@ class Dumper(VPPApi):
 
     def write(self, outfile):
         """Emit the configuration to either stdout (outfile=='-') or a filename"""
+        config = self.cache_to_config()
         if outfile and outfile == "-":
             file = sys.stdout
             outfile = "(stdout)"
+            print(yaml.dump(config), file=file)
         else:
-            file = open(outfile, "w", encoding="utf-8")
-
-        config = self.cache_to_config()
-
-        print(yaml.dump(config), file=file)
-
-        if file is not sys.stdout:
-            file.close()
+            with open(outfile, "w", encoding="utf-8") as file:
+                print(yaml.dump(config), file=file)
         self.logger.info(f"Wrote YAML config to {outfile}")
 
     def cache_to_config(self):

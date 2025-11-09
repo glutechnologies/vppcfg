@@ -1530,11 +1530,11 @@ class Reconciler:
         if outfile and outfile == "-":
             file = sys.stdout
             outfile = "(stdout)"
+            if len(output) > 0:
+                print("\n".join(output), file=file)
         else:
-            file = open(outfile, "w", encoding="utf-8")
-        if len(output) > 0:
-            print("\n".join(output), file=file)
-        if file is not sys.stdout:
-            file.close()
+            with open(outfile, "w", encoding="utf-8") as file:
+                if len(output) > 0:
+                    print("\n".join(output), file=file)
 
         self.logger.info(f"Wrote {len(output)} lines to {outfile}")
