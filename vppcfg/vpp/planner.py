@@ -29,8 +29,8 @@ from vppcfg.config import tap
 from .vppapi import VPPApi
 
 
-class Reconciler:
-    """The Reconciler class first reads the running configuration of a VPP Dataplane,
+class Planner:
+    """The Planner class first reads the running configuration of a VPP Dataplane,
     and based on an intended target YAML configuration file, plans a path to make the
     dataplane safely reflect the target config. It first prunes (removes) objects that
     are not meant to be in the dataplane, or are in the dataplane but are not of the
@@ -44,7 +44,7 @@ class Reconciler:
         vpp_api_socket="/run/vpp/api.sock",
         vpp_json_dir=None,
     ):
-        self.logger = logging.getLogger("vppcfg.reconciler")
+        self.logger = logging.getLogger("vppcfg.planner")
         self.logger.addHandler(logging.NullHandler())
 
         self.vpp = VPPApi(vpp_api_socket, vpp_json_dir)
@@ -88,7 +88,7 @@ class Reconciler:
     def prune(self):
         """Remove all objects from VPP that do not occur in the config. For an indepth explanation
         of how and why this particular pruning order is chosen, see README.md section on
-        Reconciling."""
+        Planning."""
         ret = True
         if not self.__prune_admin_state():
             self.logger.warning("Could not set interfaces down in VPP")
@@ -752,8 +752,8 @@ class Reconciler:
 
     def create(self):
         """Create all objects in VPP that occur in the config but not in VPP. For an indepth
-        explanation of how and why this particular pruning order is chosen, see README.md
-        section on Reconciling."""
+        explanation of how and why this particular creation order is chosen, see README.md
+        section on Planning."""
         ret = True
         if not self.__create_loopbacks():
             self.logger.warning("Could not create Loopbacks in VPP")
