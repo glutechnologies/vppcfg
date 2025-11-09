@@ -4,8 +4,8 @@ loopbacks: map(include('loopback'),key=str(matches='loop[0-9]+'),required=False)
 bridgedomains: map(include('bridgedomain'),key=str(matches='bd[0-9]+'),required=False)
 vxlan_tunnels: map(include('vxlan'),key=str(matches='vxlan_tunnel[0-9]+'),required=False)
 taps: map(include('tap'),key=str(matches='tap[0-9]+'),required=False)
-prefixlists: map(include('prefixlist'),key=str(matches='[a-z][a-z0-9\-]+',min=1,max=64),required=False)
-acls: map(include('acl'),key=str(matches='[a-z][a-z0-9\-]+',min=1,max=56),required=False)
+prefixlists: map(include('prefixlist'),key=str(matches='[a-z][a-z0-9-]+',min=1,max=64),required=False)
+acls: map(include('acl'),key=str(matches='[a-z][a-z0-9-]+',min=1,max=56),required=False)
 sflow: include('sflow',required=False)
 ---
 vxlan:
