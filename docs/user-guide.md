@@ -5,6 +5,29 @@ safely to a running VPP dataplane. It contains a strict syntax and semantic vali
 and a path planner that brings the dataplane from any configuration state safely to any
 other configuration state, as defined by these YAML files.
 
+## Building
+
+This program expects Python3 and PIP to be installed. It's known to work on Debian Bullseye,
+Bookworm and Trixie, as well as on Ubuntu Focal, Jammy and Noble.
+
+Optionally, edit `vppcfg/_version.py` and bump the version number. Then:
+```
+## Start a Virtual Environment
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+
+$ make install-deps
+$ make test
+$ make build
+$ deactivate
+
+## Publish requires a valid ~/.pypirc with an upload token.
+$ make publish
+
+## Install the tool with PIP
+$ make install
+```
+
 ## User Guide
 
 ```

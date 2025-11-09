@@ -1,6 +1,6 @@
 [project]
 name = "vppcfg"
-version = "1.0.2"
+dynamic = ["version"]
 authors = [
    { name="Pim van Pelt", email="pimg@ipng.ch" }
 ]
@@ -21,3 +21,6 @@ Homepage = "https://git.ipng.ch/ipng/vppcfg"
 [build-system]
 requires = ["setuptools>=61.0.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "vppcfg._version.__version__"}

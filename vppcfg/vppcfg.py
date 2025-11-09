@@ -24,9 +24,11 @@ import yaml
 # Ensure the paths are correct when we execute from the source tree
 try:
     from vppcfg.config import Validator
+    from vppcfg._version import __version__
 except ModuleNotFoundError:
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
     from vppcfg.config import Validator
+    from vppcfg._version import __version__
 from vppcfg.vpp.reconciler import Reconciler
 from vppcfg.vpp.dumper import Dumper
 
@@ -211,6 +213,7 @@ def main():
     logging.basicConfig(
         format="[%(levelname)-8s] %(name)s.%(funcName)s: %(message)s", level=level
     )
+    logging.info(f"vppcfg version {__version__}")
 
     opt_kwargs = {}
     if "vpp_json_dir" in args and args.vpp_json_dir is not None:

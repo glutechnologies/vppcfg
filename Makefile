@@ -1,14 +1,18 @@
-VERSION=1.0.2
+VERSION=$(shell python3 -c "import sys; sys.path.insert(0, '.'); from vppcfg._version import __version__; print(__version__)")
 VPPCFG:=vppcfg
 PYTHON?=python3
 PIP?=pip
 PIP_DEPENDS=build yamale netaddr pylint
-PIP_DEPENDS+=argparse pyyaml ipaddress black
+PIP_DEPENDS+=argparse pyyaml ipaddress black build twine
 WIPE=dist $(VPPCFG).egg-info .pybuild debian/vppcfg debian/vppcfg.*.log
 WIPE+=debian/vppcfg.*.debhelper debian/.debhelper debian/files
 WIPE+=debian/vppcfg.substvars
 WHL_INSTALL=dist/$(VPPCFG)-$(VERSION)-py3-none-any.whl
 TESTS=tests.py
+
+.PHONY: publish
+publish:
+	$(PYTHON) -m twine upload dist/$(VPPCFG)*$(VERSION)*
 
 .PHONY: build
 build:
