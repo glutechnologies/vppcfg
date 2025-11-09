@@ -9,21 +9,7 @@ with open(version_file) as f:
     exec(f.read())
 
 setup(
-    name="vppcfg",
     version=__version__,
-    install_requires=[
-        "requests",
-        'importlib-metadata; python_version >= "3.8"',
-        "yamale",
-        "netaddr",
-        "vpp_papi",
-    ],
     packages=["vppcfg", "vppcfg/config", "vppcfg/vpp"],
-    entry_points={
-        "console_scripts": [
-            "vppcfg = vppcfg.vppcfg:main",
-        ]
-    },
-    test_suite="vppcfg.config",
     package_data={"vppcfg": ["*.yaml"]},
 )

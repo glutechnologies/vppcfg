@@ -1,6 +1,13 @@
 [project]
 name = "vppcfg"
 dynamic = ["version"]
+dependencies = [
+    "requests",
+    "importlib-metadata; python_version >= '3.8'",
+    "yamale",
+    "netaddr",
+    "vpp_papi",
+]
 authors = [
    { name="Pim van Pelt", email="pimg@ipng.ch" }
 ]
@@ -13,6 +20,9 @@ classifiers = [
 ]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
+
+[project.scripts]
+vppcfg = "vppcfg.vppcfg:main"
 
 [project.urls]
 Homepage = "https://git.ipng.ch/ipng/vppcfg"
