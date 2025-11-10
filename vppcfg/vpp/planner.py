@@ -120,3 +120,7 @@ class Planner(PlannerPruneOperations, PlannerCreateOperations, PlannerSyncOperat
                     print("\n".join(output), file=file)
 
         self.logger.info(f"Wrote {len(output)} lines to {outfile}")
+
+    def get_commands(self):
+        """Returns the CLI commands as a dictionary."""
+        return self.cli

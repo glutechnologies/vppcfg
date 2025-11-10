@@ -554,3 +554,14 @@ class VPPApi:
             if vpp_iface.sw_if_index == lcp.host_sw_if_index:
                 return True
         return False
+
+    def cli_inband(self, cmd):
+        """Call the VPP inband CLI with the given command, and return any retun value or False if we
+        could not connect."""
+
+        if not self.connected and not self.connect():
+            self.logger.error("Could not connect to VPP")
+            return False
+
+        ret = self.vpp.api.cli_inband(cmd=cmd)
+        return ret

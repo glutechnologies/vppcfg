@@ -29,6 +29,7 @@ except ModuleNotFoundError:
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
     from vppcfg.config import Validator
     from vppcfg._version import __version__
+from vppcfg.vpp.applier import Applier
 from vppcfg.vpp.planner import Planner
 from vppcfg.vpp.dumper import Dumper
 
@@ -300,6 +301,13 @@ def main():
     logging.info("Planning succeeded")
     if args.command == "plan":
         sys.exit(0)
+
+    if args.command == "apply":
+        applier = Applier(cfg, planner.get_commands())
+        if not applier.apply():
+            logging.error("Applying configuration failed")
+            sys.exit(-50)
+        logging.info("Apply succeeded")
 
     sys.exit(0)
 
