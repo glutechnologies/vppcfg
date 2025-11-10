@@ -45,13 +45,29 @@ class Applier(VPPApi):
         """Apply the commands from self.cli to the cli_inband API call. Will eventually be
         replaced with actual API calls."""
 
+        cli_calls = 0
+        cli_success = 0
         for phase, cmds in self.cli.items():
             for cmd in cmds:
+                cli_calls += 1
+
                 self.logger.debug(f"{phase}: {cmd}")
                 ret = self.cli_inband(cmd=cmd)
-                if ret == False:
-                    self.logger.error("VPP returned error, bailing")
-                    return ret
                 self.logger.debug(f"Retval: {ret}")
 
+                if ret is False:
+                    self.logger.error("VPP returned error")
+                elif ret.retval == 0:
+                    cli_success += 1
+                else:
+                    self.logger.warning(f"VPP {cmd} returned {ret}")
+
+        if cli_calls == 0:
+            self.logger.info("Nothing to do")
+            return True
+
+        self.logger.info(f"VPP API calls: {cli_calls}, success: {cli_success}")
+        if cli_calls != cli_success:
+            self.logger.warning("Not all VPP calls were successful!")
+            return False
         return True
