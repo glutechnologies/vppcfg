@@ -22,11 +22,11 @@ from vppcfg.config import interface
 from vppcfg.config import bondethernet
 from vppcfg.config import bridgedomain
 from vppcfg.config import vxlan_tunnel
-from vppcfg.config import lcp
 from vppcfg.config import tap
+from .planner_base import PlannerBase
 
 
-class PlannerPruneOperations:
+class PlannerPruneOperations(PlannerBase):  # pylint: disable=too-few-public-methods
     """Mixin class providing prune operations for the Planner."""
 
     def prune(self):
@@ -264,7 +264,7 @@ class PlannerPruneOperations:
             return True
         return False
 
-    def _tap_has_diff(self, ifname):
+    def _tap_has_diff(self, ifname):  # pylint: disable=too-many-return-statements
         """Returns True if the given ifname (tap0) has different attributes between VPP
         and the given configuration, or if either does not exist.
 

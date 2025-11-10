@@ -23,9 +23,10 @@ from vppcfg.config import bondethernet
 from vppcfg.config import bridgedomain
 from vppcfg.config import vxlan_tunnel
 from vppcfg.config import tap
+from .planner_base import PlannerBase
 
 
-class PlannerCreateOperations:
+class PlannerCreateOperations(PlannerBase):  # pylint: disable=too-few-public-methods
     """Mixin class providing create operations for the Planner."""
 
     def create(self):

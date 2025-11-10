@@ -19,7 +19,6 @@ metadata, and plan configuration changes towards a given YAML target configurati
 """
 import sys
 import logging
-from vppcfg.config import loopback
 from vppcfg.config import interface
 from vppcfg.config import lcp
 from .vppapi import VPPApi
@@ -43,6 +42,7 @@ class Planner(PlannerPruneOperations, PlannerCreateOperations, PlannerSyncOperat
         vpp_api_socket="/run/vpp/api.sock",
         vpp_json_dir=None,
     ):
+        super().__init__()
         self.logger = logging.getLogger("vppcfg.planner")
         self.logger.addHandler(logging.NullHandler())
 
@@ -83,7 +83,6 @@ class Planner(PlannerPruneOperations, PlannerCreateOperations, PlannerSyncOperat
                 self.logger.warning(f"Interface {ifname} does not exist in the config")
                 ret = False
         return ret
-
 
     def write(self, outfile, emit_ok=False):
         """Emit the CLI contents to stdout (if outfile=='-') or a named file otherwise.

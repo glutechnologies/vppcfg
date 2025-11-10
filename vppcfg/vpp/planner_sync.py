@@ -21,9 +21,10 @@ from vppcfg.config import loopback
 from vppcfg.config import interface
 from vppcfg.config import bondethernet
 from vppcfg.config import bridgedomain
+from .planner_base import PlannerBase
 
 
-class PlannerSyncOperations:
+class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-methods
     """Mixin class providing sync operations for the Planner."""
 
     def sync(self):
