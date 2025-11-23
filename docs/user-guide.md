@@ -306,4 +306,5 @@ but instead of outputting the CLI commands to stdout or a given output file, it'
 programmatically against VPP. If no diffs are found, it'll exit gracefully.
 
 ***NOTE***: the `vppcfg apply` command will use the so-called `inband_cli` API call, and feed
-the _create_, _prune_ and _sync_ commands one by one.
+the _prune_, _create_ and _sync_ commands one by one. This approach matches most closely with
+what plan output the user might paste into `vppctl`.
