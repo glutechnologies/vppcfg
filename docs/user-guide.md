@@ -283,8 +283,9 @@ exec /etc/vpp/config/vppcfg.vpp
 exec /etc/vpp/config/tail.vpp
 EOF
 
-$ touch /etc/vpp/config/head.vpp /etc/vpp/config/tail.vpp
+$ echo "comment { commands to execute before vppcfg }" > /etc/vpp/config/head.vpp
 $ vppcfg plan --novpp -c /etc/vpp/vppcfg.yaml -o /etc/vpp/config/vppcfg.vpp
+$ echo "comment { commands to execute after vppcfg }" > /etc/vpp/config/tail.vpp
 ```
 
 After adding `unix { startup /etc/vpp/config/bootstrap.vpp }`, the VPP dataplane will execute
@@ -299,5 +300,10 @@ set (typically using `device-type: dpdk` in the PHY interface definition).
 
 ### vppcfg apply
 
-Applying state is not (yet) implemented. Don't worry, it's not much work, but this is punted until
-developer community feedback is reviewed :-)
+The purpose of the **apply** module, is to take the diff from the **plan** module, and change
+the VPP dataplane to match the intent in the YAML file. It internally runs the **plan** module,
+but instead of outputting the CLI commands to stdout or a given output file, it'll issue them
+programmatically against VPP. If no diffs are found, it'll exit gracefully.
+
+***NOTE***: the `vppcfg apply` command will use the so-called `inband_cli` API call, and feed
+the _create_, _prune_ and _sync_ commands one by one.
