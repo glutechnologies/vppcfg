@@ -253,7 +253,7 @@ $ vppcfg plan -c example.yaml -o example.exec
 [INFO    ] vppcfg.config.valid_config: Configuration validated successfully
 [INFO    ] root.main: Configuration is valid
 [INFO    ] vppcfg.vppapi.connect: VPP version is 22.06-rc0~320-g8f60318ac
-[INFO    ] vppcfg.reconciler.write: Wrote 78 lines to example.exec
+[INFO    ] vppcfg.planner.write: Wrote 78 lines to example.exec
 [INFO    ] root.main: Planning succeeded
 
 $ vppctl exec ~/src/vppcfg/example.exec 
@@ -263,7 +263,7 @@ $ vppcfg plan -c example.yaml
 [INFO    ] vppcfg.config.valid_config: Configuration validated successfully
 [INFO    ] root.main: Configuration is valid
 [INFO    ] vppcfg.vppapi.connect: VPP version is 22.06-rc0~320-g8f60318ac
-[INFO    ] vppcfg.reconciler.write: Wrote 0 lines to (stdout)
+[INFO    ] vppcfg.planner.write: Wrote 0 lines to (stdout)
 [INFO    ] root.main: Planning succeeded
 ```
 

@@ -174,9 +174,9 @@ if __name__ == "__main__":
         .wasSuccessful()
     )
 
-    RETVAL = 0
+    retval = 0
     if not yaml_ok:
-        RETVAL -= 1
+        retval -= 1
     if not unit_ok:
-        RETVAL -= 2
-    sys.exit(RETVAL)
+        retval -= 2
+    sys.exit(retval)

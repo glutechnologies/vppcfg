@@ -29,7 +29,8 @@ except ModuleNotFoundError:
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
     from vppcfg.config import Validator
     from vppcfg._version import __version__
-from vppcfg.vpp.reconciler import Reconciler
+from vppcfg.vpp.applier import Applier
+from vppcfg.vpp.planner import Planner
 from vppcfg.vpp.dumper import Dumper
 
 try:
@@ -246,44 +247,44 @@ def main():
     if args.command == "check":
         sys.exit(0)
 
-    reconciler = Reconciler(cfg, **opt_kwargs)
+    planner = Planner(cfg, **opt_kwargs)
     if args.command == "plan" and args.novpp:
-        if not reconciler.vpp.mockconfig(cfg):
+        if not planner.vpp.mockconfig(cfg):
             sys.exit(-7)
     else:
-        if not reconciler.vpp.readconfig():
+        if not planner.vpp.readconfig():
             sys.exit(-3)
 
-        if not reconciler.phys_exist_in_vpp():
+        if not planner.phys_exist_in_vpp():
             logging.error("Not all PHYs in the config exist in VPP")
             sys.exit(-4)
 
-        if not reconciler.phys_exist_in_config():
+        if not planner.phys_exist_in_config():
             logging.error("Not all PHYs in VPP exist in the config")
             sys.exit(-5)
 
-        if not reconciler.lcps_exist_with_lcp_enabled():
+        if not planner.lcps_exist_with_lcp_enabled():
             logging.error(
                 "Linux Control Plane is needed, but linux-cp API is not available"
             )
             sys.exit(-6)
 
     failed = False
-    if not reconciler.prune():
+    if not planner.prune():
         if not args.force:
             logging.error("Planning prune failure")
             sys.exit(-10)
         failed = True
         logging.warning("Planning prune failure, continuing due to --force")
 
-    if not reconciler.create():
+    if not planner.create():
         if not args.force:
             logging.error("Planning create failure")
             sys.exit(-20)
         failed = True
         logging.warning("Planning create failure, continuing due to --force")
 
-    if not reconciler.sync():
+    if not planner.sync():
         if not args.force:
             logging.error("Planning sync failure")
             sys.exit(-30)
@@ -291,7 +292,7 @@ def main():
         logging.warning("Planning sync failure, continuing due to --force")
 
     if args.command == "plan":
-        reconciler.write(args.outfile, emit_ok=not failed)
+        planner.write(args.outfile, emit_ok=not failed)
 
     if failed:
         logging.error("Planning failed")
@@ -300,6 +301,13 @@ def main():
     logging.info("Planning succeeded")
     if args.command == "plan":
         sys.exit(0)
+
+    if args.command == "apply":
+        applier = Applier(cfg, planner.get_commands())
+        if not applier.apply():
+            logging.error("Applying configuration failed")
+            sys.exit(-50)
+        logging.info("Apply succeeded")
 
     sys.exit(0)
 
