@@ -101,7 +101,7 @@ loopbacks:
 
 ### Bridge Domains
 
-BridgeDomains are required to be named `bdN` where N in [1, 16777216). Note that bridgedomain
+BridgeDomains are required to be named `bdN` where N in [1, 65536). Note that bridgedomain
 `bd0` is reserved and cannot be used. The configuration allows the following fields:
 
 *   ***description***: A string, no longer than 64 characters, and excluding the single quote '
