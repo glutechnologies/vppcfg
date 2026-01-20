@@ -136,7 +136,7 @@ def validate_bridgedomains(yaml):
         if instance == 0:
             msgs.append(f"bridgedomain {ifname} is reserved")
             result = False
-        elif instance > 16777215:
+        elif instance > 65535:
             msgs.append(
                 f"bridgedomain {ifname} has instance {int(instance)} which is too large"
             )

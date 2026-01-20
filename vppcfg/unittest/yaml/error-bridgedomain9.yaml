@@ -9,7 +9,7 @@ test:
 bridgedomains:
   bd0:
     description: "Reserved in VPP"
-  bd16777215:
+  bd65535:
     description: "Cool."
-  bd16777216:
+  bd65536:
     description: "Not cool."
