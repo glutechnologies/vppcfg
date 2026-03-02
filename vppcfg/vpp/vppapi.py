@@ -203,7 +203,7 @@ class VPPApi:
         if len(self.cache["interface_addresses"][iface.sw_if_index]) > 0:
             self.logger.warning(f"Not all addresses were removed on {ifname}")
         del self.cache["interface_addresses"][iface.sw_if_index]
-        del self.cache["interface_acls"][iface.sw_if_index]
+        self.cache["interface_acls"].pop(iface.sw_if_index, None)
         del self.cache["interface_names"][ifname]
 
         ## Use my_dict.pop('key', None), as it allows 'key' to be absent
