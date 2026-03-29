@@ -508,6 +508,7 @@ class VPPApi:
     def get_phys(self):
         """Return all interfaces for which the super interface has the same sw_if_index
         and aren't known to be virtual interfaces"""
+        lcp_tap_sw_if_indexes = {lcp.host_sw_if_index for lcp in self.cache["lcps"].values()}
         phys = [
             self.cache["interfaces"][x].interface_name
             for x in self.cache["interfaces"]
@@ -515,6 +516,7 @@ class VPPApi:
             == self.cache["interfaces"][x].sup_sw_if_index
             and self.cache["interfaces"][x].interface_dev_type
             not in ["virtio", "BVI", "Loopback", "VXLAN", "local", "bond"]
+            and self.cache["interfaces"][x].sw_if_index not in lcp_tap_sw_if_indexes
         ]
         return phys
 
@@ -547,7 +549,7 @@ class VPPApi:
         or False otherwise."""
 
         vpp_iface = self.get_interface_by_name(tap_ifname)
-        if not vpp_iface or not vpp_iface.interface_dev_type == "virtio":
+        if not vpp_iface:
             return False
 
         for _idx, lcp in self.cache["lcps"].items():
