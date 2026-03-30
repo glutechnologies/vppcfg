@@ -80,9 +80,10 @@ def main():
         "-c",
         "--config",
         dest="config",
-        required=True,
+        required=False,
+        default="/etc/vpp/vppcfg.yaml",
         type=str,
-        help="""YAML configuration file for vppcfg""",
+        help="""YAML configuration file for vppcfg, default /etc/vpp/vppcfg.yaml""",
     )
 
     dump_p = subparsers.add_parser(
@@ -129,9 +130,10 @@ def main():
         "-c",
         "--config",
         dest="config",
-        required=True,
+        required=False,
+        default="/etc/vpp/vppcfg.yaml",
         type=str,
-        help="""YAML configuration file for vppcfg""",
+        help="""YAML configuration file for vppcfg, default /etc/vpp/vppcfg.yaml""",
     )
     plan_p.add_argument(
         "--novpp",
@@ -179,9 +181,10 @@ def main():
         "-c",
         "--config",
         dest="config",
-        required=True,
+        required=False,
+        default="/etc/vpp/vppcfg.yaml",
         type=str,
-        help="""YAML configuration file for vppcfg""",
+        help="""YAML configuration file for vppcfg, default /etc/vpp/vppcfg.yaml""",
     )
     apply_p.add_argument(
         "-j",
