@@ -241,6 +241,13 @@ def main():
     except OSError as err:
         logging.error(f"Couldn't read config from {args.config}: {err}")
         sys.exit(-1)
+    except yaml.YAMLError as err:
+        logging.error(f"Couldn't parse YAML from {args.config}: {err}")
+        sys.exit(-1)
+
+    if cfg is None:
+        logging.error(f"Config file {args.config} is empty")
+        sys.exit(-1)
 
     validator = Validator(schema=args.schema)
     if not validator.valid_config(cfg):
