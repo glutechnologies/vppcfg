@@ -327,7 +327,9 @@ class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-meth
         """Synchronize the VPP Dataplane max frame size (link MTU), where 'shrink' determines the
         direction (if shrink is True, go from inner-most (QinQ) to outer-most (untagged),
         and the other direction if shrink is False"""
-        lcp_tap_sw_if_indexes = {lcp.host_sw_if_index for lcp in self.vpp.cache["lcps"].values()}
+        lcp_tap_sw_if_indexes = {
+            lcp.host_sw_if_index for lcp in self.vpp.cache["lcps"].values()
+        }
         for _idx, vpp_iface in self.vpp.cache["interfaces"].items():
             if vpp_iface.sub_number_of_tags != 0:
                 continue

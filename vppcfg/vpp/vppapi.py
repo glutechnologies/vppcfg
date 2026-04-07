@@ -508,7 +508,9 @@ class VPPApi:
     def get_phys(self):
         """Return all interfaces for which the super interface has the same sw_if_index
         and aren't known to be virtual interfaces"""
-        lcp_tap_sw_if_indexes = {lcp.host_sw_if_index for lcp in self.cache["lcps"].values()}
+        lcp_tap_sw_if_indexes = {
+            lcp.host_sw_if_index for lcp in self.cache["lcps"].values()
+        }
         phys = [
             self.cache["interfaces"][x].interface_name
             for x in self.cache["interfaces"]
