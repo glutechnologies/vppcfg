@@ -555,10 +555,10 @@ def validate_interfaces(yaml):
                     result = False
                 if not address.is_canonical(addr):
                     canonical = address.get_canonical(addr)
-                    msgs.append(
-                        f"interface {ifname} IP address {addr} is not canonical, use {canonical}"
+                    logger.warning(
+                        f"interface {ifname} IP address {addr} is not canonical, using {canonical}"
                     )
-                    result = False
+                    iface["addresses"][iface["addresses"].index(addr)] = canonical
 
         if "l2xc" in iface:
             if has_sub(yaml, ifname):

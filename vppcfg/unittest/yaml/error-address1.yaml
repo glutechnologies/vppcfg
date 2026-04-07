@@ -5,8 +5,7 @@ test:
       - "interface .* IP address .* conflicts with another"
       - "sub-interface .* IP address .* conflicts with another"
       - "loopback .* IP address .* conflicts with another"
-      - "interface .* IP address .* is not canonical, use .*"
-    count: 15
+    count: 14
 ---
 interfaces:
   GigabitEthernet1/0/0:
