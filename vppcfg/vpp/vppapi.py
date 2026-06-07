@@ -494,14 +494,31 @@ class VPPApi:
 
     def is_foreign_bridgedomain(self, bd_id):
         """Return True if the bridge-domain given by bd_id is owned by an external
-        controlplane (it carries a foreign bd_tag). Untagged bridge-domains are
-        considered ours and return False. Note that VPP only allows a bd_tag to be
-        set at create time, so vppcfg cannot stamp existing untagged bridge-domains;
-        those simply remain ours by virtue of being untagged."""
+        controlplane and should not be touched by vppcfg.
+
+        A bridge-domain is foreign if it carries a foreign bd_tag. In addition, VPP
+        does not require a bd_tag, and some external controlplanes (e.g. vpp-evpn)
+        tag the member interfaces and BVI of their bridge-domains but not the
+        bridge-domain itself. Therefore a bridge-domain is also considered foreign if
+        its BVI or any of its member interfaces is foreign: such a bridge-domain
+        belongs to that controlplane, and vppcfg must not delete it or yank its
+        members back to L3.
+
+        Untagged bridge-domains that contain only our own interfaces are ours; VPP
+        only allows a bd_tag to be set at create time, so vppcfg cannot stamp
+        existing ones, and they remain ours by virtue of being untagged."""
         bridge = self.cache["bridgedomains"].get(bd_id)
         if not bridge:
             return False
-        return self._tag_is_foreign(getattr(bridge, "bd_tag", ""))
+        if self._tag_is_foreign(getattr(bridge, "bd_tag", "")):
+            return True
+        bvi_sw_if_index = getattr(bridge, "bvi_sw_if_index", 2**32 - 1)
+        if bvi_sw_if_index != 2**32 - 1 and self.is_foreign_interface(bvi_sw_if_index):
+            return True
+        for member in getattr(bridge, "sw_if_details", []) or []:
+            if self.is_foreign_interface(member.sw_if_index):
+                return True
+        return False
 
     def get_sub_interfaces(self):
         """Return all interfaces which have a sub-id and one or more tags"""

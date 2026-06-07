@@ -154,6 +154,9 @@ class PlannerPruneOperations(PlannerBase):  # pylint: disable=too-few-public-met
                 for member in bridge.sw_if_details:
                     if member.sw_if_index == bridge.bvi_sw_if_index:
                         continue
+                    if self.vpp.is_foreign_interface(member.sw_if_index):
+                        ## Owned by an external controlplane, never return it to L3.
+                        continue
                     member_iface = self.vpp.cache["interfaces"][member.sw_if_index]
                     member_ifname = member_iface.interface_name
                     if member_iface.sub_id > 0:
@@ -172,6 +175,9 @@ class PlannerPruneOperations(PlannerBase):  # pylint: disable=too-few-public-met
             else:
                 self.logger.debug(f"BridgeDomain OK: {bridgename}")
                 for member in bridge.sw_if_details:
+                    if self.vpp.is_foreign_interface(member.sw_if_index):
+                        ## Owned by an external controlplane, never return it to L3.
+                        continue
                     member_ifname = self.vpp.cache["interfaces"][
                         member.sw_if_index
                     ].interface_name
