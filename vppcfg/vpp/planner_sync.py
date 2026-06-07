@@ -61,7 +61,42 @@ class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-meth
         if not self._sync_admin_state():
             self.logger.warning("Could not sync interface adminstate in VPP")
             ret = False
+        if not self._sync_tags():
+            self.logger.warning("Could not sync interface tags in VPP")
+            ret = False
         return ret
+
+    def _sync_tags(self):
+        """Stamp our ownership tag onto every interface we own that does not yet
+        carry a tag. Interfaces with a foreign (non-vppcfg) tag are owned by an
+        external controlplane and are skipped (the get_*() enumerators already
+        exclude them). This is what migrates a brownfield dataplane: on the first
+        run all of our untagged interfaces get tagged, and the operation is a no-op
+        on subsequent runs.
+
+        Bridge-domains are intentionally not handled here: VPP only accepts a
+        bd_tag at create time, so an existing untagged bridge-domain cannot be
+        stamped. Untagged bridge-domains remain ours by the ownership rule, and new
+        ones are tagged in the create() phase."""
+        for ifname in (
+            self.vpp.get_phys()
+            + self.vpp.get_loopbacks()
+            + self.vpp.get_bondethernets()
+            + self.vpp.get_vxlan_tunnels()
+            + self.vpp.get_sub_interfaces()
+        ):
+            vpp_iface = self.vpp.get_interface_by_name(ifname)
+            if not vpp_iface:
+                continue
+            if self.vpp.tap_is_lcp(ifname):
+                continue
+            if vpp_iface.tag:
+                ## Already tagged. Since the get_*() enumerators exclude foreign
+                ## tags, a non-empty tag here is our own; nothing to do.
+                continue
+            cli = f"set interface tag {ifname} {self.vpp.OWN_TAG}"
+            self.cli["sync"].append(cli)
+        return True
 
     def _sync_loopbacks(self):
         """Synchronize the VPP Dataplane configuration for loopbacks"""

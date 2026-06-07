@@ -55,6 +55,15 @@ class PlannerCreateOperations(PlannerBase):  # pylint: disable=too-few-public-me
             ret = False
         return ret
 
+    def _create_tag(self, ifname):
+        """Stamp our ownership tag onto a freshly created interface, in the same
+        create phase, so that a single vppcfg invocation reaches the target state
+        (the tag does not have to wait for the next run's _sync_tags() pass).
+        Bridge-domains are tagged differently, via bd-tag at create time, because
+        VPP only accepts a bd_tag when the bridge-domain is created."""
+        cli = f"set interface tag {ifname} {self.vpp.OWN_TAG}"
+        self.cli["create"].append(cli)
+
     def _create_loopbacks(self):
         """Create all loopbacks that occur in the config but not in VPP"""
         for ifname in loopback.get_loopbacks(self.cfg):
@@ -66,6 +75,7 @@ class PlannerCreateOperations(PlannerBase):  # pylint: disable=too-few-public-me
             if "mac" in iface:
                 cli += f" mac {iface['mac']}"
             self.cli["create"].append(cli)
+            self._create_tag(ifname)
         return True
 
     def _create_bondethernets(self):
@@ -83,6 +93,7 @@ class PlannerCreateOperations(PlannerBase):  # pylint: disable=too-few-public-me
             if "mac" in iface:
                 cli += f" hw-addr {iface['mac']}"
             self.cli["create"].append(cli)
+            self._create_tag(ifname)
         return True
 
     def _create_vxlan_tunnels(self):
@@ -97,6 +108,7 @@ class PlannerCreateOperations(PlannerBase):  # pylint: disable=too-few-public-me
                 f"instance {instance} vni {iface['vni']} decap-next l2"
             )
             self.cli["create"].append(cli)
+            self._create_tag(ifname)
         return True
 
     def _create_sub_interfaces(self):
@@ -124,6 +136,7 @@ class PlannerCreateOperations(PlannerBase):  # pylint: disable=too-few-public-me
                 parent, subid = ifname.split(".")
                 cli = f"create sub {parent} {int(int(subid))} {encapstr}"
                 self.cli["create"].append(cli)
+                self._create_tag(ifname)
         return True
 
     def _create_taps(self):
@@ -147,6 +160,7 @@ class PlannerCreateOperations(PlannerBase):  # pylint: disable=too-few-public-me
             if "tx-ring-size" in iface:
                 cli += f" tx-ring-size {int(iface['tx-ring-size'])}"
             self.cli["create"].append(cli)
+            self._create_tag(ifname)
 
         return True
 
@@ -173,6 +187,9 @@ class PlannerCreateOperations(PlannerBase):  # pylint: disable=too-few-public-me
                 cli += " arp-ufwd 1"
             if settings["mac-age-minutes"] > 0:
                 cli += f" mac-age {int(settings['mac-age-minutes'])}"
+            ## Stamp our ownership tag at create time. VPP only accepts bd-tag when
+            ## the bridge-domain is created, so this cannot be done later in sync().
+            cli += f" bd-tag {self.vpp.OWN_TAG}"
             self.cli["create"].append(cli)
         return True
 

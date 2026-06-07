@@ -107,6 +107,9 @@ class PlannerPruneOperations(PlannerBase):  # pylint: disable=too-few-public-met
                     continue
                 if vpp_iface.sub_number_of_tags != numtags:
                     continue
+                if self.vpp.is_foreign_interface(vpp_iface.sw_if_index):
+                    ## Owned by an external controlplane, leave it alone.
+                    continue
                 _config_ifname, config_iface = loopback.get_by_name(
                     self.cfg, vpp_iface.interface_name
                 )
@@ -138,6 +141,11 @@ class PlannerPruneOperations(PlannerBase):  # pylint: disable=too-few-public-met
         found in to-be removed bridge-domains, they are returned to L3 mode, and tag-rewrites removed.
         """
         for idx, bridge in self.vpp.cache["bridgedomains"].items():
+            if self.vpp.is_foreign_bridgedomain(idx):
+                ## Owned by an external controlplane, leave it alone. Bridge-domains
+                ## without a tag are considered ours (VPP cannot tag them after
+                ## creation), so only ones with a foreign bd_tag are skipped here.
+                continue
             bridgename = f"bd{int(idx)}"
             _config_ifname, config_iface = bridgedomain.get_by_name(
                 self.cfg, bridgename
@@ -197,6 +205,9 @@ class PlannerPruneOperations(PlannerBase):  # pylint: disable=too-few-public-met
         back into L3 mode, and their tag-rewrites removed."""
         removed_l2xcs = []
         for _idx, l2xc in self.vpp.cache["l2xcs"].items():
+            if self.vpp.is_foreign_interface(l2xc.rx_sw_if_index):
+                ## Owned by an external controlplane, leave it alone.
+                continue
             vpp_rx_ifname = self.vpp.cache["interfaces"][
                 l2xc.rx_sw_if_index
             ].interface_name
@@ -346,6 +357,9 @@ class PlannerPruneOperations(PlannerBase):  # pylint: disable=too-few-public-met
         for _idx, vpp_tap in self.vpp.cache["taps"].items():
             vpp_iface = self.vpp.cache["interfaces"][vpp_tap.sw_if_index]
             vpp_ifname = vpp_iface.interface_name
+            if self.vpp.is_foreign_interface(vpp_tap.sw_if_index):
+                ## Owned by an external controlplane, leave it alone.
+                continue
             if self.vpp.tap_is_lcp(vpp_ifname):
                 continue
             if self._tap_has_diff(vpp_ifname):
@@ -364,6 +378,9 @@ class PlannerPruneOperations(PlannerBase):  # pylint: disable=too-few-public-met
         removed_interfaces = []
         removed_bondethernet_members = []
         for idx, bond in self.vpp.cache["bondethernets"].items():
+            if self.vpp.is_foreign_interface(idx):
+                ## Owned by an external controlplane, leave it alone.
+                continue
             vpp_ifname = bond.interface_name
             _config_ifname, config_iface = bondethernet.get_by_name(
                 self.cfg, vpp_ifname
@@ -410,6 +427,9 @@ class PlannerPruneOperations(PlannerBase):  # pylint: disable=too-few-public-met
         but with differing attributes, remove them also."""
         removed_interfaces = []
         for idx, vpp_vxlan in self.vpp.cache["vxlan_tunnels"].items():
+            if self.vpp.is_foreign_interface(idx):
+                ## Owned by an external controlplane, leave it alone.
+                continue
             vpp_ifname = self.vpp.cache["interfaces"][idx].interface_name
             config_ifname, config_iface = vxlan_tunnel.get_by_name(self.cfg, vpp_ifname)
             if not config_iface or self._vxlan_tunnel_has_diff(config_ifname):
@@ -568,6 +588,10 @@ class PlannerPruneOperations(PlannerBase):  # pylint: disable=too-few-public-met
             for _idx, lcp_iface in lcps.items():
                 vpp_iface = self.vpp.cache["interfaces"][lcp_iface.phy_sw_if_index]
                 if vpp_iface.sub_number_of_tags != numtags:
+                    continue
+                if self.vpp.is_foreign_interface(lcp_iface.phy_sw_if_index):
+                    ## The underlying interface is owned by an external controlplane,
+                    ## leave its LCP alone.
                     continue
                 if vpp_iface.interface_dev_type == "Loopback":
                     config_ifname, config_iface = loopback.get_by_lcp_name(

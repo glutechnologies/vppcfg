@@ -27,6 +27,13 @@ from vpp_papi import VPPApiClient, VPPApiJSONFiles, MACAddress
 class VPPApi:
     """The VPPApi class is a base class that abstracts the vpp_papi."""
 
+    ## The tag string that vppcfg stamps onto the objects it owns. Objects which
+    ## carry a non-empty tag that differs from this value are assumed to be owned
+    ## by an external controlplane, and vppcfg will leave them alone (it will not
+    ## prune or sync them). Objects without any tag, and objects carrying this tag,
+    ## are considered ours. See is_foreign_interface() / is_foreign_bridgedomain().
+    OWN_TAG = "vppcfg"
+
     def __init__(
         self,
         vpp_api_socket="/run/vpp/api.sock",
@@ -252,7 +259,7 @@ class VPPApi:
             mtu=[0, 0, 0, 0],
             interface_name="local0",
             interface_dev_type="local",
-            tag="mock",
+            tag=self.OWN_TAG,
         )
         self.cache["interface_acls"][idx] = self.vpp_messages[
             "acl_interface_list_details"
@@ -291,7 +298,7 @@ class VPPApi:
                 mtu=[64, 0, 0, 0],
                 interface_name=ifname,
                 interface_dev_type=iface["device-type"],
-                tag="mock",
+                tag=self.OWN_TAG,
             )
             self.cache["interface_acls"][idx] = self.vpp_messages[
                 "acl_interface_list_details"
@@ -466,6 +473,36 @@ class VPPApi:
             pass
         return None
 
+    def _tag_is_foreign(self, tag):
+        """Return True if the given tag marks an object owned by an external
+        controlplane, i.e. it is non-empty and differs from our own OWN_TAG.
+        Untagged objects (empty tag) and objects carrying OWN_TAG are ours."""
+        if isinstance(tag, bytes):
+            tag = tag.decode("utf-8", "replace")
+        if not tag:
+            return False
+        return tag != self.OWN_TAG
+
+    def is_foreign_interface(self, sw_if_index):
+        """Return True if the interface given by sw_if_index is owned by an external
+        controlplane (it carries a foreign tag), and should not be touched by vppcfg.
+        Untagged interfaces are considered ours and return False."""
+        iface = self.cache["interfaces"].get(sw_if_index)
+        if not iface:
+            return False
+        return self._tag_is_foreign(iface.tag)
+
+    def is_foreign_bridgedomain(self, bd_id):
+        """Return True if the bridge-domain given by bd_id is owned by an external
+        controlplane (it carries a foreign bd_tag). Untagged bridge-domains are
+        considered ours and return False. Note that VPP only allows a bd_tag to be
+        set at create time, so vppcfg cannot stamp existing untagged bridge-domains;
+        those simply remain ours by virtue of being untagged."""
+        bridge = self.cache["bridgedomains"].get(bd_id)
+        if not bridge:
+            return False
+        return self._tag_is_foreign(getattr(bridge, "bd_tag", ""))
+
     def get_sub_interfaces(self):
         """Return all interfaces which have a sub-id and one or more tags"""
         subints = [
@@ -473,6 +510,7 @@ class VPPApi:
             for x in self.cache["interfaces"]
             if self.cache["interfaces"][x].sub_id > 0
             and self.cache["interfaces"][x].sub_number_of_tags > 0
+            and not self.is_foreign_interface(x)
         ]
         return subints
 
@@ -483,6 +521,7 @@ class VPPApi:
             for x in self.cache["interfaces"]
             if self.cache["interfaces"][x].sub_id > 0
             and self.cache["interfaces"][x].sub_inner_vlan_id > 0
+            and not self.is_foreign_interface(x)
         ]
         return qinx_subints
 
@@ -493,6 +532,7 @@ class VPPApi:
             for x in self.cache["interfaces"]
             if self.cache["interfaces"][x].sub_id > 0
             and self.cache["interfaces"][x].sub_inner_vlan_id == 0
+            and not self.is_foreign_interface(x)
         ]
         return dot1x_subints
 
@@ -502,6 +542,7 @@ class VPPApi:
             self.cache["interfaces"][x].interface_name
             for x in self.cache["interfaces"]
             if self.cache["interfaces"][x].interface_dev_type == "Loopback"
+            and not self.is_foreign_interface(x)
         ]
         return loopbacks
 
@@ -519,6 +560,7 @@ class VPPApi:
             and self.cache["interfaces"][x].interface_dev_type
             not in ["virtio", "BVI", "Loopback", "VXLAN", "local", "bond"]
             and self.cache["interfaces"][x].sw_if_index not in lcp_tap_sw_if_indexes
+            and not self.is_foreign_interface(x)
         ]
         return phys
 
@@ -527,6 +569,7 @@ class VPPApi:
         bonds = [
             self.cache["bondethernets"][x].interface_name
             for x in self.cache["bondethernets"]
+            if not self.is_foreign_interface(x)
         ]
         return bonds
 
@@ -536,6 +579,7 @@ class VPPApi:
             self.cache["interfaces"][x].interface_name
             for x in self.cache["interfaces"]
             if self.cache["interfaces"][x].interface_dev_type in ["VXLAN"]
+            and not self.is_foreign_interface(x)
         ]
         return vxlan_tunnels
 
