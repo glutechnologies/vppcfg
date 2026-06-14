@@ -372,6 +372,9 @@ class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-meth
                 continue
             if vpp_iface.sw_if_index in lcp_tap_sw_if_indexes:
                 continue
+            if self.vpp.is_foreign_interface(vpp_iface.sw_if_index):
+                ## Owned by an external controlplane (foreign tag); leave it alone.
+                continue
 
             _config_ifname, config_iface = interface.get_by_name(
                 self.cfg, vpp_iface.interface_name
