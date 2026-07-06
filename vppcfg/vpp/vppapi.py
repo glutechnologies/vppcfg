@@ -54,6 +54,25 @@ class VPPApi:
         self.cache_clear()
         self.lcp_enabled = False
 
+        # When no JSON directory is given (the default), bootstrap the API message
+        # signatures directly from the running VPP over the API socket. When a
+        # directory is given (-j), load the signatures from the JSON files on disk.
+        self.bootstrapapi = self.vpp_json_dir is None
+        if not self.bootstrapapi:
+            self._load_json_files()
+
+    def _register_messages(self, messages):
+        """Enumerate all VPPMessage signatures from the given dict, and give their
+        API namedtuple defaults so creating instances can set only those fields which
+        are relevant."""
+        for name, msg in messages.items():
+            msg.tuple.__new__.__defaults__ = (None,) * len(msg.tuple._fields)
+            self.vpp_messages[name] = msg
+
+    def _load_json_files(self):
+        """Locate the VPP API JSON files on disk and load their message signatures.
+        Used when a JSON directory is given (-j), and as a fallback when running
+        without a VPP connection (eg. 'plan --novpp')."""
         if self.vpp_json_dir is None:
             self.vpp_json_dir = VPPApiJSONFiles.find_api_dir([])
         elif not os.path.isdir(self.vpp_json_dir):
@@ -63,17 +82,14 @@ class VPPApi:
         self.vpp_jsonfiles = VPPApiJSONFiles.find_api_files(api_dir=self.vpp_json_dir)
         if not self.vpp_jsonfiles:
             self.logger.error("No JSON API files found")
+            return False
 
-        # Enumerate all VPPMessage signatures from the JSON API files, and give their
-        # API namedtuple defaults so creating instances can set only those fields which
-        # are relevant.
         for json_filename in self.vpp_jsonfiles:
             with open(json_filename, "r", encoding="utf-8") as file_handle:
-                for name, msg in VPPApiJSONFiles.process_json_file(file_handle)[
-                    0
-                ].items():
-                    msg.tuple.__new__.__defaults__ = (None,) * len(msg.tuple._fields)
-                    self.vpp_messages[name] = msg
+                self._register_messages(
+                    VPPApiJSONFiles.process_json_file(file_handle)[0]
+                )
+        return True
 
     def connect(self, retries=30):
         """Connect to the VPP Dataplane, if we're not already connected"""
@@ -84,9 +100,14 @@ class VPPApi:
             self.logger.error(f"VPP api socket file not found: {self.vpp_api_socket}")
             return False
 
-        self.vpp = VPPApiClient(
-            apifiles=self.vpp_jsonfiles, server_address=self.vpp_api_socket
-        )
+        if self.bootstrapapi:
+            self.vpp = VPPApiClient(
+                bootstrapapi=True, server_address=self.vpp_api_socket
+            )
+        else:
+            self.vpp = VPPApiClient(
+                apifiles=self.vpp_jsonfiles, server_address=self.vpp_api_socket
+            )
         self.logger.debug("Connecting to VPP")
         for i in range(retries):
             try:
@@ -102,6 +123,11 @@ class VPPApi:
         if not self.connected:
             self.logger.error(f"Could not connect to VPP (tried {retries} times)")
             return False
+
+        # When bootstrapping, the message signatures are only available after the
+        # connection has been established and VPP has served us its API definitions.
+        if self.bootstrapapi and not self.vpp_messages:
+            self._register_messages(self.vpp.messages)
 
         # pylint: disable=no-member
         api_response = self.vpp.api.show_version()
@@ -233,6 +259,12 @@ class VPPApi:
             self.logger.error("YAML config does not contain any interfaces")
             return False
         self.logger.debug(f"config: {yaml_config['interfaces']}")
+
+        # Mocking runs offline, so the API message signatures cannot be bootstrapped
+        # from a running VPP; fall back to loading them from the JSON files on disk.
+        if not self.vpp_messages and not self._load_json_files():
+            self.logger.error("Could not load VPP API message definitions")
+            return False
 
         self.cache_clear()
         ## Add mock local0

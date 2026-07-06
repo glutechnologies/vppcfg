@@ -6,7 +6,10 @@ dependencies = [
     "importlib-metadata; python_version >= '3.8'",
     "yamale",
     "netaddr",
-    "vpp_papi",
+    # NOTE: vpp_papi is intentionally NOT listed here. It is provided by the
+    # 'python3-vpp-api' Debian package that ships with VPP, and that copy matches
+    # the running dataplane's API. The PyPI copy lags many releases behind and,
+    # installed into /usr/local, shadows the deb and breaks API parsing.
 ]
 authors = [
    { name="Pim van Pelt", email="pimg@ipng.ch" }

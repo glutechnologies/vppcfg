@@ -104,7 +104,7 @@ def main():
         dest="vpp_json_dir",
         required=False,
         type=str,
-        help="""Directory where VPP API JSON files are located""",
+        help="""Directory where VPP API JSON files are located; default is to load them from the running VPP via the API socket""",
     )
     dump_p.add_argument(
         "-a",
@@ -156,7 +156,7 @@ def main():
         dest="vpp_json_dir",
         required=False,
         type=str,
-        help="""Directory where VPP API JSON files are located""",
+        help="""Directory where VPP API JSON files are located; default is to load them from the running VPP via the API socket""",
     )
     plan_p.add_argument(
         "-a",
@@ -192,7 +192,7 @@ def main():
         dest="vpp_json_dir",
         required=False,
         type=str,
-        help="""Directory where VPP API JSON files are located""",
+        help="""Directory where VPP API JSON files are located; default is to load them from the running VPP via the API socket""",
     )
     apply_p.add_argument(
         "-a",

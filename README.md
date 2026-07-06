@@ -10,6 +10,16 @@ You can simply install this package from [[PyPi](https://pypi.org/project/vppcfg
 $ pip install [--break-system-packages] vppcfg
 ```
 
+`vppcfg` uses the VPP Python API bindings (`vpp_papi`), which are provided by the
+`python3-vpp-api` Debian package that ships with VPP. That copy matches the API of
+the running dataplane, so it is a prerequisite and is deliberately *not* pulled in
+from PyPI (the PyPI copy lags many releases behind and, installed into `/usr/local`,
+shadows the deb and breaks API parsing). If you previously installed `vpp_papi` from
+PyPI, remove it so the Debian package is used:
+```
+$ pip uninstall [--break-system-packages] vpp_papi
+```
+
 ## Running
 
 ```
