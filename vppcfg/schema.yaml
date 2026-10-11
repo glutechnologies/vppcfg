@@ -57,7 +57,7 @@ interface:
   l2xc: str(required=False)
   state: enum('up', 'down', required=False)
   mpls: bool(required=False)
-  device-type: enum('dpdk', 'af-packet', required=False)
+  device-type: enum('dpdk', 'af-packet', 'rdma', required=False)
   sflow: bool(required=False)
 ---
 sub-interface:

@@ -527,7 +527,10 @@ class PlannerPruneOperations(PlannerBase):  # pylint: disable=too-few-public-met
             if not config_iface:
                 ## Interfaces were sent DOWN in the _prune_admin_state() step previously
                 self._prune_addresses(vpp_ifname, [])
-                if vpp_iface.link_mtu != 9000:
+                if vpp_iface.link_mtu != 9000 and vpp_iface.interface_dev_type not in [
+                    "RDMA interface",
+                    "rdma",
+                ]:
                     cli = f"set interface mtu 9000 {vpp_ifname}"
                     self.cli["prune"].append(cli)
                 continue

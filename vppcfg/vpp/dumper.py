@@ -120,6 +120,7 @@ class Dumper(VPPApi):
                     "VXLAN",
                     "dpdk",
                     "af-packet",
+                    "RDMA interface",
                     "virtio",
                     "pg",
                 ]:
@@ -152,7 +153,8 @@ class Dumper(VPPApi):
                         i["state"] = "down"
 
                     if (
-                        iface.interface_dev_type in ["dpdk", "af-packet"]
+                        iface.interface_dev_type
+                        in ["dpdk", "af-packet", "RDMA interface"]
                         and iface.sub_number_of_tags == 0
                     ):
                         i["mac"] = str(iface.l2_address)
@@ -162,6 +164,10 @@ class Dumper(VPPApi):
 
                     i["mtu"] = iface.mtu[0]
                     if iface.sub_number_of_tags == 0:
+                        if iface.interface_dev_type in ["dpdk", "af-packet"]:
+                            i["device-type"] = iface.interface_dev_type
+                        elif iface.interface_dev_type == "RDMA interface":
+                            i["device-type"] = "rdma"
                         config["interfaces"][iface.interface_name] = i
                         continue
 
@@ -190,10 +196,6 @@ class Dumper(VPPApi):
                     config["interfaces"][sup_iface.interface_name]["sub-interfaces"][
                         iface.sub_id
                     ] = i
-        if iface.interface_dev_type in ["dpdk", "af-packet"]:
-            config["interfaces"][iface.interface_name][
-                "device-type"
-            ] = iface.interface_dev_type
 
         for idx, iface in self.cache["vxlan_tunnels"].items():
             vpp_iface = self.cache["interfaces"][iface.sw_if_index]

@@ -386,6 +386,9 @@ class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-meth
                 continue
             if not interface.is_phy(self.cfg, vpp_iface.interface_name):
                 continue
+            if vpp_iface.interface_dev_type in ["RDMA interface", "rdma"]:
+                ## RDMA devices do not allow setting the Max Frame Size (link MTU).
+                continue
             config_mtu = interface.get_mtu(self.cfg, vpp_iface.interface_name)
 
             if (

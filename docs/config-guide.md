@@ -327,8 +327,10 @@ exist as a PHY in VPP (ie. `HundredGigabitEthernet12/0/0`) or as a specified `Bo
     target interface.
 *   ***state***: An optional string that configures the link admin state, either `up` or `down`.
     If it is not specified, the link is considered admin 'up'.
-*   ***device-type***: An optional interface type in VPP. Currently the only supported value is
-    `dpdk`, and it is used to generate correct mock interfaces if the `--novpp` flag is used.
+*   ***device-type***: An optional interface type in VPP. Supported values are `dpdk`,
+    `af-packet` and `rdma`. It is used to generate correct mock interfaces if the `--novpp`
+    flag is used. RDMA interfaces do not allow their link MTU (max frame size) to be changed,
+    so `vppcfg` will only set the packet MTU on them.
 *   ***mpls***: An optional boolean that configures MPLS on the interface or sub-interface. The
     default value is `false`, if the field is not specified, which means MPLS will not be enabled.
 *   ***unnumbered***: An interface name from which this (sub-)interface will borrow IPv4 and
