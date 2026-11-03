@@ -118,6 +118,13 @@ class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-meth
 
     def _sync_phys(self):
         """Synchronize the VPP Dataplane configuration for PHYs"""
+        ## VPP gives the members of a BondEthernet the MAC address of the bond.
+        ## Setting a member's own MAC address would take it away from the bond.
+        bond_members = {
+            member
+            for members in self.vpp.cache["bondethernet_members"].values()
+            for member in members
+        }
         for ifname in interface.get_phys(self.cfg):
             if not ifname in self.vpp.cache["interface_names"]:
                 ## New interface
@@ -130,6 +137,11 @@ class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-meth
             if "mac" in config_iface and config_iface["mac"] != str(
                 vpp_iface.l2_address
             ):
+                if vpp_iface.sw_if_index in bond_members:
+                    self.logger.debug(
+                        f"Not setting MAC address of {config_ifname}, a BondEthernet member"
+                    )
+                    continue
                 cli = f"set interface mac address {config_ifname} {config_iface['mac']}"
                 self.cli["sync"].append(cli)
         return True
