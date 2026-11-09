@@ -1,0 +1,52 @@
+test:
+  description: "rx-mode on the interfaces that receive: PHYs, TAPs and anything with an LCP"
+  errors:
+    count: 0
+---
+interfaces:
+  GigabitEthernet1/0/0:
+    description: "A PHY: its own queues, and those of the TAP of its LCP"
+    lcp: "e0"
+    rx-mode: interrupt
+  GigabitEthernet1/0/1:
+    description: "A PHY without an LCP: its own queues"
+    rx-mode: adaptive
+  GigabitEthernet1/0/2:
+    description: "A bond member"
+    rx-mode: interrupt
+  GigabitEthernet1/0/3:
+    description: "A PHY left as VPP has it"
+  BondEthernet0:
+    description: "A bond has no queues: the TAP of its LCP"
+    lcp: "bond0"
+    rx-mode: interrupt
+  vxlan_tunnel0:
+    description: "A tunnel has no queues: the TAP of its LCP"
+    lcp: "vxlan0"
+    addresses: [ 192.0.2.17/30 ]
+    rx-mode: polling
+  tap100:
+    description: "A TAP: its own queues"
+    rx-mode: interrupt
+
+bondethernets:
+  BondEthernet0:
+    interfaces: [ GigabitEthernet1/0/2 ]
+
+vxlan_tunnels:
+  vxlan_tunnel0:
+    local: 192.0.2.1
+    remote: 192.0.2.2
+    vni: 100
+
+taps:
+  tap100:
+    host:
+      name: vpp-tap100
+
+loopbacks:
+  loop0:
+    description: "A loopback has no queues: the TAP of its LCP"
+    lcp: "lo0"
+    addresses: [ 192.0.2.1/32 ]
+    rx-mode: interrupt

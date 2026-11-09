@@ -7,6 +7,10 @@ taps: map(include('tap'),key=str(matches='tap[0-9]+'),required=False)
 prefixlists: map(include('prefixlist'),key=str(matches='[a-z][a-z0-9-]+',min=1,max=64),required=False)
 acls: map(include('acl'),key=str(matches='[a-z][a-z0-9-]+',min=1,max=56),required=False)
 sflow: include('sflow',required=False)
+defaults: include('defaults',required=False)
+---
+defaults:
+  rx-mode: enum('polling','interrupt','adaptive',required=False)
 ---
 vxlan:
   description: str(exclude='\'"',len=64,required=False)
@@ -38,6 +42,7 @@ loopback:
   addresses: list(ip_interface(),min=1,max=6,required=False)
   unnumbered: str(required=False)
   mpls: bool(required=False)
+  rx-mode: enum('polling','interrupt','adaptive',required=False)
 ---
 bondethernet:
   description: str(exclude='\'"',len=64,required=False)
@@ -59,6 +64,7 @@ interface:
   mpls: bool(required=False)
   device-type: enum('dpdk', 'af-packet', 'rdma', required=False)
   sflow: bool(required=False)
+  rx-mode: enum('polling','interrupt','adaptive',required=False)
 ---
 sub-interface:
   description: str(exclude='\'"',len=64,required=False)

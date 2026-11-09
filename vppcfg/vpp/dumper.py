@@ -51,6 +51,20 @@ class Dumper(VPPApi):
                 print(yaml.dump(config), file=file)
         self.logger.info(f"Wrote YAML config to {outfile}")
 
+    def _get_dump_rx_mode(self, sw_if_index):
+        """The rx-mode to dump for an interface: that of its own receive queues,
+        or else that of the TAP of its LCP. None when it is polling, VPP's
+        default, or when its queues are not all in the same mode."""
+        modes = self.cache["interface_rx_modes"].get(sw_if_index)
+        if not modes:
+            lcp = self.get_lcp_by_interface(sw_if_index)
+            if lcp:
+                modes = self.cache["interface_rx_modes"].get(lcp.host_sw_if_index)
+        if not modes or len(modes) != 1:
+            return None
+        mode = next(iter(modes))
+        return None if mode == "polling" else mode
+
     def cache_to_config(self):
         """Convert the VPP configuration cache (previously read by readconfig() into
         a YAML representation."""
@@ -114,6 +128,9 @@ class Dumper(VPPApi):
                             ]
                     if iface.sw_if_index in self.cache["interface_mpls"]:
                         loop["mpls"] = self.cache["interface_mpls"][iface.sw_if_index]
+                    rx_mode = self._get_dump_rx_mode(iface.sw_if_index)
+                    if rx_mode:
+                        loop["rx-mode"] = rx_mode
                     config["loopbacks"][iface.interface_name] = loop
                 elif iface.interface_dev_type in [
                     "bond",
@@ -168,6 +185,9 @@ class Dumper(VPPApi):
                             i["device-type"] = iface.interface_dev_type
                         elif iface.interface_dev_type == "RDMA interface":
                             i["device-type"] = "rdma"
+                        rx_mode = self._get_dump_rx_mode(iface.sw_if_index)
+                        if rx_mode:
+                            i["rx-mode"] = rx_mode
                         config["interfaces"][iface.interface_name] = i
                         continue
 

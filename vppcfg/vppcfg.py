@@ -40,6 +40,23 @@ except ImportError:
     sys.exit(-2)
 
 
+def apply_new_rx_modes(planner, applier):
+    """The TAP of an LCP exists only once the create phase made it, so the
+    plan could not set its rx-mode: read VPP again and set the rx-modes that
+    still differ, on the connections of the first pass. Returns True when
+    there is nothing left to do."""
+    if not any("lcp create" in cmd for cmd in planner.get_commands()["create"]):
+        return True
+    if not planner.vpp.readconfig():
+        return False
+    planner.cli = {"prune": [], "create": [], "sync": []}
+    planner.sync_rx_modes()
+    if not planner.get_commands()["sync"]:
+        return True
+    applier.cli = planner.get_commands()
+    return applier.apply()
+
+
 def main():
     """The main vppcfg program"""
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
@@ -318,6 +335,9 @@ def main():
             logging.error("Applying configuration failed")
             sys.exit(-50)
         logging.info("Apply succeeded")
+        if not apply_new_rx_modes(planner, applier):
+            logging.error("Applying the rx-mode of new interfaces failed")
+            sys.exit(-50)
 
     sys.exit(0)
 

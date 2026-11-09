@@ -34,6 +34,9 @@ class VPPApi:
     ## are considered ours. See is_foreign_interface() / is_foreign_bridgedomain().
     OWN_TAG = "vppcfg"
 
+    ## The rx_mode enum of interface_types.api, by its value.
+    RX_MODES = {1: "polling", 2: "interrupt", 3: "adaptive"}
+
     def __init__(
         self,
         vpp_api_socket="/run/vpp/api.sock",
@@ -164,6 +167,7 @@ class VPPApi:
             "acls": {},
             "acl_tags": {},
             "interface_sflow": {},
+            "interface_rx_modes": {},
             "sflow": {},
         }
         return True
@@ -490,6 +494,17 @@ class VPPApi:
         self.logger.debug("Retrieving bondethernets")
         api_response = self.vpp.api.sw_bond_interface_dump()
 
+        self.logger.debug("Retrieving interface rx-modes")
+        api_response = self.vpp.api.sw_interface_rx_placement_dump(
+            sw_if_index=0xFFFFFFFF
+        )
+        for queue in api_response:
+            mode = self.RX_MODES.get(int(queue.mode))
+            if mode:
+                self.cache["interface_rx_modes"].setdefault(
+                    queue.sw_if_index, set()
+                ).add(mode)
+
         self.cache_read = True
         return self.cache_read
 
@@ -645,6 +660,25 @@ class VPPApi:
             if lcp.phy_sw_if_index == sw_if_index:
                 return lcp
         return None
+
+    def get_lcp_tap_name(self, ifname):
+        """Return the name of the TAP of the LCP of the interface ifname, or None
+        if it has no LCP (yet)."""
+        vpp_iface = self.get_interface_by_name(ifname)
+        if not vpp_iface:
+            return None
+        lcp = self.get_lcp_by_interface(vpp_iface.sw_if_index)
+        if not lcp or not lcp.host_sw_if_index in self.cache["interfaces"]:
+            return None
+        return self.cache["interfaces"][lcp.host_sw_if_index].interface_name
+
+    def get_rx_modes(self, ifname):
+        """Return the set of rx-modes of the receive queues of ifname, empty if it
+        has none."""
+        vpp_iface = self.get_interface_by_name(ifname)
+        if not vpp_iface:
+            return set()
+        return self.cache["interface_rx_modes"].get(vpp_iface.sw_if_index, set())
 
     def tap_is_lcp(self, tap_ifname):
         """Returns True if the given tap_ifname is a TAP interface belonging to an LCP,

@@ -1,0 +1,14 @@
+test:
+  description: "rx-mode is polling, interrupt or adaptive, and sub-interfaces have none"
+  errors:
+    expected:
+     - "yamale: interfaces.GigabitEthernet1/0/0.rx-mode: 'sleepy' not in \\('polling', 'interrupt', 'adaptive'\\)"
+     - "yamale: interfaces.GigabitEthernet1/0/0.sub-interfaces.100.rx-mode: Unexpected element"
+    count: 2
+---
+interfaces:
+  GigabitEthernet1/0/0:
+    rx-mode: sleepy
+    sub-interfaces:
+      100:
+        rx-mode: interrupt

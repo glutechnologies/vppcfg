@@ -1,0 +1,12 @@
+test:
+  description: "The default rx-mode is polling, interrupt or adaptive"
+  errors:
+    expected:
+     - "yamale: defaults.rx-mode: 'fast' not in \\('polling', 'interrupt', 'adaptive'\\)"
+    count: 1
+---
+defaults:
+  rx-mode: fast
+interfaces:
+  GigabitEthernet1/0/0:
+    description: "A PHY"

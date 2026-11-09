@@ -58,6 +58,9 @@ class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-meth
         if not self._sync_sflow_state():
             self.logger.warning("Could not sync interface sFlow state in VPP")
             ret = False
+        if not self.sync_rx_modes():
+            self.logger.warning("Could not sync interface rx-mode in VPP")
+            ret = False
         if not self._sync_admin_state():
             self.logger.warning("Could not sync interface adminstate in VPP")
             ret = False
@@ -507,6 +510,32 @@ class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-meth
                 else:
                     cli = f"sflow enable-disable {vpp_ifname} disable"
                 self.cli["sync"].append(cli)
+        return True
+
+    def sync_rx_modes(self):
+        """Synchronize the rx-mode of interfaces and loopbacks that set one: of
+        their own receive queues (PHYs and TAPs) and of the TAP of their LCP.
+
+        The TAP of an LCP that this run creates does not exist yet, so it cannot
+        be named here: Applier callers run this again once the create phase is
+        applied (see vppcfg.py)."""
+        for ifname in interface.get_interfaces(self.cfg) + loopback.get_loopbacks(
+            self.cfg
+        ):
+            mode = interface.get_rx_mode(self.cfg, ifname)
+            if not mode:
+                continue
+            targets = []
+            if interface.has_rx_queues(self.cfg, ifname):
+                targets.append(ifname)
+            tap_ifname = self.vpp.get_lcp_tap_name(ifname)
+            if tap_ifname:
+                targets.append(tap_ifname)
+            for target in targets:
+                vpp_modes = self.vpp.get_rx_modes(target)
+                if vpp_modes and vpp_modes != {mode}:
+                    cli = f"set interface rx-mode {target} {mode}"
+                    self.cli["sync"].append(cli)
         return True
 
     def _sync_mpls_state(self):

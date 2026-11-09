@@ -1,0 +1,30 @@
+test:
+  description: "rx-mode needs queues of the interface's own or an LCP"
+  errors:
+    expected:
+     - "interface BondEthernet0 has no receive queues and no LCP, cannot set rx-mode"
+     - "interface vxlan_tunnel0 has no receive queues and no LCP, cannot set rx-mode"
+     - "loopback loop0 has no LCP, cannot set rx-mode"
+    count: 3
+---
+interfaces:
+  GigabitEthernet1/0/0:
+    description: "A bond member"
+  BondEthernet0:
+    rx-mode: interrupt
+  vxlan_tunnel0:
+    rx-mode: interrupt
+
+bondethernets:
+  BondEthernet0:
+    interfaces: [ GigabitEthernet1/0/0 ]
+
+vxlan_tunnels:
+  vxlan_tunnel0:
+    local: 192.0.2.1
+    remote: 192.0.2.2
+    vni: 100
+
+loopbacks:
+  loop0:
+    rx-mode: interrupt

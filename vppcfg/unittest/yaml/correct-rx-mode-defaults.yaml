@@ -1,0 +1,23 @@
+test:
+  description: "A default rx-mode for every interface, which an interface can override"
+  errors:
+    count: 0
+---
+defaults:
+  rx-mode: interrupt
+
+interfaces:
+  GigabitEthernet1/0/0:
+    lcp: "e0"
+  GigabitEthernet1/0/1:
+    rx-mode: polling
+  BondEthernet0:
+    description: "Without an LCP the default does not apply, and it is not an error"
+
+bondethernets:
+  BondEthernet0:
+    interfaces: [ GigabitEthernet1/0/1 ]
+
+loopbacks:
+  loop0:
+    description: "Neither for a loopback without an LCP"
