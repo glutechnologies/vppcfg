@@ -105,7 +105,8 @@ class PlannerCreateOperations(PlannerBase):  # pylint: disable=too-few-public-me
             instance = int(ifname[12:])
             cli = (
                 f"create vxlan tunnel src {iface['local']} dst {iface['remote']} "
-                f"instance {instance} vni {iface['vni']} decap-next l2"
+                f"instance {instance} vni {iface['vni']} "
+                f"decap-next {interface.get_vxlan_decap_next(self.cfg, ifname)}"
             )
             self.cli["create"].append(cli)
             self._create_tag(ifname)

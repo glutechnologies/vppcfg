@@ -16,6 +16,7 @@
 import unittest
 import yaml
 from . import vxlan_tunnel
+from . import interface
 from .unittestyaml import UnitTestYaml
 
 
@@ -51,3 +52,12 @@ class TestVXLANMethods(unittest.TestCase):
         self.assertTrue(vxlan_tunnel.vni_unique(self.cfg, 100))
         self.assertFalse(vxlan_tunnel.vni_unique(self.cfg, 101))
         self.assertTrue(vxlan_tunnel.vni_unique(self.cfg, 102))
+
+    def test_decap_next(self):
+        for ifname in ["vxlan_tunnel0", "vxlan_tunnel1", "vxlan_tunnel2"]:
+            self.assertEqual("l2", interface.get_vxlan_decap_next(self.cfg, ifname))
+        # Neither bridged nor cross-connected: routed, its frames go to ethernet-input.
+        self.assertEqual(
+            "node ethernet-input",
+            interface.get_vxlan_decap_next(self.cfg, "vxlan_tunnel3"),
+        )

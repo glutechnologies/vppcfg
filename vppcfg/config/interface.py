@@ -392,6 +392,16 @@ def is_l2(yaml, ifname):
     return False
 
 
+def get_vxlan_decap_next(yaml, ifname):
+    """Returns the decap-next of the VXLAN tunnel ifname, as VPP's 'create vxlan tunnel' takes it.
+    VPP hands what it decapsulates to l2-input, which drops it unless the tunnel is a bridgedomain
+    member or in an L2XC. A tunnel in L3 mode (with addresses, an LCP or unnumbered) needs its
+    frames to go to ethernet-input instead."""
+    if is_l2(yaml, ifname):
+        return "l2"
+    return "node ethernet-input"
+
+
 def is_l3(yaml, ifname):
     """Returns True if the interface exists and is neither l2xc target nor bridgedomain"""
     return not is_l2(yaml, ifname)

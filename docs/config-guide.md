@@ -218,9 +218,16 @@ VXLAN Tunnels are required to be named `vxlan_tunnelN` (note the underscore), wh
 Local and Remote sides of the tunnel MUST have the same address family.
 
 *Caveat*: VXLAN tunnels are currently only possible as unicast (src/dst), with static source
-and destination ports (4789), and with a `decap-next` of L2. Also, VNIs must be globally unique.
+and destination ports (4789). Also, VNIs must be globally unique.
 In a future release of `vppcfg`, these fields will be configurable, and VNI reuses will be
 allowed between different dst endpoints.
+
+A VXLAN tunnel is created in L2 or in L3 mode depending on how it is used in `interfaces`: one
+that is a bridgedomain member or in an L2XC hands what it decapsulates to `l2-input`
+(`decap-next l2`); any other, typically one with addresses or an LCP, hands it to
+`ethernet-input` (`decap-next node ethernet-input`), so that it is routed. The mode of a tunnel
+cannot change in VPP: when a tunnel moves between L2 and L3, it is removed and created again,
+with its LCP.
 
 Examples:
 ```

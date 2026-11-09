@@ -277,6 +277,12 @@ class PlannerPruneOperations(PlannerBase):  # pylint: disable=too-few-public-met
             return True
         if config_iface["vni"] != vpp_vxlan.vni:
             return True
+        ## A tunnel in L2 mode decapsulates to l2-input, the first next node of vxlan4-input and
+        ## vxlan6-input (VXLAN_INPUT_NEXT_L2_INPUT); one in L3 mode to ethernet-input. The decap-next
+        ## of a tunnel cannot change, so a tunnel that changes mode is created again.
+        vpp_is_l2 = vpp_vxlan.decap_next_index == 1
+        if vpp_is_l2 != interface.is_l2(self.cfg, ifname):
+            return True
         return False
 
     def _tap_has_diff(self, ifname):  # pylint: disable=too-many-return-statements
@@ -666,6 +672,12 @@ class PlannerPruneOperations(PlannerBase):  # pylint: disable=too-few-public-met
                     bond_iface = self.vpp.cache["interfaces"][vpp_iface.sup_sw_if_index]
                     if self._bond_has_diff(bond_iface.interface_name):
                         ## If BondEthernet changed, it has to be re-created, so all LCPs must be removed.
+                        removed_lcps.append(lcp_iface)
+                        continue
+                if vpp_iface.interface_dev_type == "VXLAN":
+                    vxlan_iface = self.vpp.cache["interfaces"][vpp_iface.sup_sw_if_index]
+                    if self._vxlan_tunnel_has_diff(vxlan_iface.interface_name):
+                        ## If the VXLAN Tunnel changed, it has to be re-created, so all LCPs must be removed.
                         removed_lcps.append(lcp_iface)
                         continue
 
