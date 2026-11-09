@@ -218,9 +218,10 @@ VXLAN Tunnels are required to be named `vxlan_tunnelN` (note the underscore), wh
 Local and Remote sides of the tunnel MUST have the same address family.
 
 *Caveat*: VXLAN tunnels are currently only possible as unicast (src/dst), with static source
-and destination ports (4789). Also, VNIs must be globally unique.
-In a future release of `vppcfg`, these fields will be configurable, and VNI reuses will be
-allowed between different dst endpoints.
+and destination ports (4789). In a future release of `vppcfg`, these fields will be configurable.
+
+A VNI may be used by more than one tunnel, as long as no two of them have the same local and
+remote addresses: VPP tells tunnels apart by both addresses and their VNI.
 
 A VXLAN tunnel is created in L2 or in L3 mode depending on how it is used in `interfaces`: one
 that is a bridgedomain member or in an L2XC hands what it decapsulates to `l2-input`
