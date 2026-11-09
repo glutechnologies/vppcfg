@@ -22,3 +22,15 @@ vxlan_tunnels:
     local: 192.0.2.17
     remote: 2001:db8:1::2
     vni: 102
+
+  vxlan_tunnel4:
+    description: "VXLAN VNI and addresses overlap with vxlan_tunnel5"
+    local: 192.0.2.33
+    remote: 192.0.2.34
+    vni: 104
+
+  vxlan_tunnel5:
+    description: "VXLAN VNI and addresses overlap with vxlan_tunnel4"
+    local: 192.0.2.33
+    remote: 192.0.2.34
+    vni: 104

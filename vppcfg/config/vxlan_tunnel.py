@@ -32,15 +32,26 @@ def is_vxlan_tunnel(yaml, ifname):
     return iface is not None
 
 
-def vni_unique(yaml, vni):
-    """Return True if the VNI is unique amongst all VXLANs"""
+def vni_unique(yaml, vni, local=None, remote=None):
+    """Return True if the VNI is unique amongst all VXLANs. VPP tells tunnels apart by their
+    local and remote addresses and their VNI: given local and remote, return True if the VNI is
+    unique amongst the VXLANs between those two addresses."""
     if not "vxlan_tunnels" in yaml:
         return True
 
     ncount = 0
     for _ifname, iface in yaml["vxlan_tunnels"].items():
-        if iface["vni"] == vni:
-            ncount = ncount + 1
+        if iface["vni"] != vni:
+            continue
+        if local is not None and ipaddress.ip_address(
+            iface["local"]
+        ) != ipaddress.ip_address(local):
+            continue
+        if remote is not None and ipaddress.ip_address(
+            iface["remote"]
+        ) != ipaddress.ip_address(remote):
+            continue
+        ncount = ncount + 1
 
     return ncount < 2
 
@@ -76,8 +87,10 @@ def validate_vxlan_tunnels(yaml):
             result = False
 
         vni = iface["vni"]
-        if not vni_unique(yaml, vni):
-            msgs.append(f"vxlan_tunnel {ifname} VNI {int(vni)} is not unique")
+        if not vni_unique(yaml, vni, iface["local"], iface["remote"]):
+            msgs.append(
+                f"vxlan_tunnel {ifname} VNI {int(vni)} is not unique between {iface['local']} and {iface['remote']}"
+            )
             result = False
         local = ipaddress.ip_address(iface["local"])
         remote = ipaddress.ip_address(iface["remote"])

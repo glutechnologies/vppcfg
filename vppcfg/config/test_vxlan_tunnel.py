@@ -40,7 +40,7 @@ class TestVXLANMethods(unittest.TestCase):
 
     def test_enumerators(self):
         ifs = vxlan_tunnel.get_vxlan_tunnels(self.cfg)
-        self.assertEqual(len(ifs), 4)
+        self.assertEqual(len(ifs), 6)
         self.assertIn("vxlan_tunnel0", ifs)
         self.assertIn("vxlan_tunnel1", ifs)
         self.assertIn("vxlan_tunnel2", ifs)
@@ -51,3 +51,13 @@ class TestVXLANMethods(unittest.TestCase):
         self.assertTrue(vxlan_tunnel.vni_unique(self.cfg, 100))
         self.assertFalse(vxlan_tunnel.vni_unique(self.cfg, 101))
         self.assertTrue(vxlan_tunnel.vni_unique(self.cfg, 102))
+        # The same VNI between other addresses is another tunnel.
+        self.assertTrue(
+            vxlan_tunnel.vni_unique(self.cfg, 101, "192.0.2.9", "192.0.2.10")
+        )
+        self.assertTrue(
+            vxlan_tunnel.vni_unique(self.cfg, 101, "2001:db8::1", "2001:0db8::2")
+        )
+        self.assertFalse(
+            vxlan_tunnel.vni_unique(self.cfg, 104, "192.0.2.33", "192.0.2.34")
+        )

@@ -19,6 +19,12 @@ vxlan_tunnels:
     remote: 2001:db8::2
     vni: 102
 
+  vxlan_tunnel3:
+    description: "The VNI of vxlan_tunnel0, toward another remote"
+    local: 192.0.2.1
+    remote: 192.0.2.3
+    vni: 100
+
 interfaces:
   GigabitEthernet1/0/0:
     sub-interfaces:
@@ -36,7 +42,11 @@ interfaces:
     lcp: 'vxlan1234567890'
     addresses: [ 10.0.0.1/24, 2001:db8:1::1/64 ]
 
+  vxlan_tunnel3:
+    mtu: 9216
+    description: "Bridgedomain member"
+
 bridgedomains:
   bd10:
     mtu: 9216
-    interfaces: [ vxlan_tunnel0 ]
+    interfaces: [ vxlan_tunnel0, vxlan_tunnel3 ]
