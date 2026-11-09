@@ -426,6 +426,31 @@ def get_mtu(yaml, ifname):
     return 1500
 
 
+def get_rx_mode(yaml, ifname):
+    """Return the rx-mode of the interface or loopback: its own, or else the one of
+    'defaults'. None if neither sets one, or if it is a sub-interface (which has no
+    queues and no TAP of its own) or it has nothing to set it on."""
+    if is_sub(yaml, ifname):
+        return None
+    _ifname, iface = get_by_name(yaml, ifname)
+    if not iface:
+        _ifname, iface = loopback.get_by_name(yaml, ifname)
+    if not iface:
+        return None
+    if "rx-mode" in iface:
+        return iface["rx-mode"]
+    if not has_rx_queues(yaml, ifname) and not "lcp" in iface:
+        return None
+    return yaml.get("defaults", {}).get("rx-mode")
+
+
+def has_rx_queues(yaml, ifname):
+    """Return True if the interface receives on queues of its own: a PHY or a TAP.
+    BondEthernets, VXLAN tunnels and loopbacks have none; only the TAP of their
+    LCP has."""
+    return is_phy(yaml, ifname) or tap.is_tap(yaml, ifname)
+
+
 def get_admin_state(yaml, ifname):
     """Return True if the interface admin state should be 'up'. Return False
     if it does not exist, or if it's set to 'down'."""
@@ -476,6 +501,17 @@ def validate_interfaces(yaml):
         iface_mtu = get_mtu(yaml, ifname)
         iface_lcp = get_lcp(yaml, ifname)
         iface_address = has_address(yaml, ifname)
+
+        if (
+            "rx-mode" in iface
+            and not is_phy(yaml, ifname)
+            and not tap.is_tap(yaml, ifname)
+            and not iface_lcp
+        ):
+            msgs.append(
+                f"interface {ifname} has no receive queues and no LCP, cannot set rx-mode"
+            )
+            result = False
 
         if ifname.startswith("tap"):
             _tap_ifname, tap_iface = tap.get_by_name(yaml, ifname)

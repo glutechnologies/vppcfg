@@ -146,6 +146,9 @@ def validate_loopbacks(yaml):
                 f"loopback {ifname} MAC address {iface['mac']} cannot be multicast"
             )
             result = False
+        if "rx-mode" in iface and not "lcp" in iface:
+            msgs.append(f"loopback {ifname} has no LCP, cannot set rx-mode")
+            result = False
 
     return result, msgs
 

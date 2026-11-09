@@ -79,6 +79,9 @@ following fields:
 *   ***unnumbered***: An interface name from which this loopback interface will borrow IPv4 and
     IPv6 addresses. The interface can be either a loopback, an interface or a sub-interface. if
     the interface is unnumbered, it can't be L2 and it can't have addresses.
+*   ***rx-mode***: An optional receive mode, `polling`, `interrupt` or `adaptive`, for the TAP
+    of the loopback's LCP, which is the only part of a loopback that receives packets. It needs
+    an `lcp`. See the `rx-mode` of Interfaces; when it is not set, the one of `defaults` applies.
 
 Although VPP would allow it, `vppcfg` does not allow for loopbacks to have sub-interfaces.
 
@@ -338,6 +341,16 @@ exist as a PHY in VPP (ie. `HundredGigabitEthernet12/0/0`) or as a specified `Bo
     the interface is unnumbered, it can't be L2 and it can't have addresses.
 *   ***sflow***: An optional boolean value, when true will enable sFlow collection on this
     interface. sFlow collection is only supported on PHY (physical) interfaces.
+*   ***rx-mode***: An optional receive mode, `polling`, `interrupt` or `adaptive`. It is set
+    on the receive queues of the interface itself, if it has any (PHYs and TAPs), and on the TAP
+    of its LCP, if it has one; a BondEthernet or a VXLAN tunnel needs an `lcp` to set it, and
+    sub-interfaces cannot set it. When it is not specified, the `rx-mode` of `defaults` applies,
+    and without one `vppcfg` leaves the mode as VPP has it, which is `polling` by default. A thread polls as long as any of its queues does, so a
+    dataplane that should not keep a CPU busy (a control plane only node, such as a route
+    reflector) sets `interrupt` on every interface and LCP; the driver must support it (DPDK
+    devices often only do with `vfio-pci`, `af-packet` interfaces and TAPs do). The TAP of an LCP
+    created by `vppcfg apply` gets its mode in a second pass of the same run, so `vppcfg plan`
+    does not list it.
 
 Further, top-level interfaces, that is to say those that do not have an encapsulation, are permitted
 to have any number of sub-interfaces specified by `subid`, an integer between [0,2G), which further
@@ -550,4 +563,17 @@ sflow:
   sampling-rate: 10000
   polling-interval: 20
   header-bytes: 128
+```
+
+### Defaults
+
+Settings that apply to every object that can take them, unless the object sets its own:
+
+*   **rx-mode**: The receive mode, `polling`, `interrupt` or `adaptive`, of every interface and
+    loopback (see their `rx-mode`): of the queues of PHYs and TAPs, and of the TAP of every LCP.
+    Objects that have neither (a sub-interface, a BondEthernet without an LCP) are skipped.
+
+```
+defaults:
+  rx-mode: interrupt
 ```
