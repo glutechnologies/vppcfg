@@ -22,3 +22,16 @@ vxlan_tunnels:
     local: 192.0.2.17
     remote: 2001:db8:1::2
     vni: 102
+
+interfaces:
+  vxlan_tunnel0:
+    description: "A bridgedomain member: L2"
+  vxlan_tunnel1:
+    description: "An L2XC source: L2"
+    l2xc: vxlan_tunnel2
+  vxlan_tunnel2:
+    description: "An L2XC target: L2"
+
+bridgedomains:
+  bd10:
+    interfaces: [ vxlan_tunnel0 ]
