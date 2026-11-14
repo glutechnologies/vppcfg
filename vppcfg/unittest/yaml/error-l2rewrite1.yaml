@@ -1,0 +1,28 @@
+test:
+  description: "A VLAN tag rewrite pops at most the tags of its encapsulation, on an L2 interface"
+  errors:
+    expected:
+     - "interface .* l2-rewrite pops .* tags, but its encapsulation has .*"
+     - "interface .* l2-rewrite needs an L2 interface"
+    count: 3
+---
+interfaces:
+  GigabitEthernet1/0/0:
+    mtu: 9000
+    l2-rewrite:
+      pop: 1
+    sub-interfaces:
+      100:
+        encapsulation:
+          dot1q: 100
+        l2-rewrite:
+          pop: 2
+      101:
+        encapsulation:
+          dot1q: 101
+        l2-rewrite:
+          pop: 1
+bridgedomains:
+  bd10:
+    mtu: 9000
+    interfaces: [ GigabitEthernet1/0/0, GigabitEthernet1/0/0.100 ]

@@ -19,6 +19,8 @@ from vppcfg.config import loopback
 from vppcfg.config import interface
 from vppcfg.config import bondethernet
 from vppcfg.config import bridgedomain
+from vppcfg.config import l2rewrite as config_l2rewrite
+from . import l2rewrite
 from .planner_base import PlannerBase
 
 
@@ -39,6 +41,9 @@ class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-meth
             ret = False
         if not self._sync_l2xcs():
             self.logger.warning("Could not sync L2 Cross Connects in VPP")
+            ret = False
+        if not self._sync_l2_rewrites():
+            self.logger.warning("Could not sync L2 tag rewrites in VPP")
             ret = False
         if not self._sync_mtu():
             self.logger.warning("Could not sync interface MTU in VPP")
@@ -266,15 +271,6 @@ class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-meth
                     if not member_ifname in bridge_members:
                         cli = f"set interface l2 bridge {member_ifname} {int(instance)}"
                         self.cli["sync"].append(cli)
-                        operation = "disable"
-                        if interface.is_qinx(self.cfg, member_ifname):
-                            operation = "pop 2"
-                        elif interface.is_sub(self.cfg, member_ifname):
-                            operation = "pop 1"
-                        cli = (
-                            f"set interface l2 tag-rewrite {member_ifname} {operation}"
-                        )
-                        self.cli["sync"].append(cli)
         return True
 
     def _sync_l2xcs(self):
@@ -301,14 +297,29 @@ class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-meth
             if l2xc_changed:
                 cli = f"set interface l2 xconnect {config_rx_ifname} {config_tx_ifname}"
                 self.cli["sync"].append(cli)
+        return True
 
-                operation = "disable"
-                if interface.is_qinx(self.cfg, config_rx_ifname):
-                    operation = "pop 2"
-                elif interface.is_sub(self.cfg, config_rx_ifname):
-                    operation = "pop 1"
-                cli = f"set interface l2 tag-rewrite {config_rx_ifname} {operation}"
-                self.cli["sync"].append(cli)
+    def _sync_l2_rewrites(self):
+        """Synchronize the VLAN tag rewrite of every interface whose rewrite vppcfg
+        manages: those with an 'l2-rewrite', and the bridge-domain members and L2XC
+        sources that pop the tags of their encapsulation by default. An interface the
+        prune phase reset ('tag-rewrite ... disable'), or that is not in VPP yet, has
+        none."""
+        reset = set()
+        prefix = "set interface l2 tag-rewrite "
+        for cli in self.cli["prune"]:
+            if cli.startswith(prefix):
+                reset.add(cli[len(prefix) :].split()[0])
+        disabled = (0, 0, 0, 0)
+        for ifname in config_l2rewrite.get_l2_rewrite_interfaces(self.cfg):
+            rewrite = config_l2rewrite.get_l2_rewrite(self.cfg, ifname)
+            vpp_iface = self.vpp.get_interface_by_name(ifname)
+            if not vpp_iface or ifname in reset:
+                vpp_vtr = disabled
+            else:
+                vpp_vtr = l2rewrite.vtr_of(vpp_iface)
+            if vpp_vtr != l2rewrite.to_vtr(rewrite):
+                self.cli["sync"].append(l2rewrite.cli(ifname, rewrite))
         return True
 
     def _sync_mtu_direction(self, shrink=True):

@@ -1,0 +1,25 @@
+test:
+  description: "The schema bounds of a VLAN tag rewrite"
+  errors:
+    expected:
+     - "yamale: .*l2-rewrite.pop: .*"
+     - "yamale: .*l2-rewrite.push.pcp: .*"
+     - "yamale: .*l2-rewrite.push.dot1q: .*"
+    count: 3
+---
+interfaces:
+  GigabitEthernet1/0/0:
+    mtu: 9000
+    sub-interfaces:
+      100:
+        encapsulation:
+          dot1q: 100
+        l2-rewrite:
+          pop: 3
+          push:
+            dot1q: 4096
+            pcp: 8
+bridgedomains:
+  bd10:
+    mtu: 9000
+    interfaces: [ GigabitEthernet1/0/0.100 ]

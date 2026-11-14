@@ -1,0 +1,48 @@
+test:
+  description: "VLAN tag rewrites of bridge-domain members and L2XC sources"
+  errors:
+    count: 0
+---
+interfaces:
+  GigabitEthernet1/0/0:
+    mtu: 9000
+    sub-interfaces:
+      100:
+        encapsulation:
+          dot1q: 100
+        l2-rewrite:
+          pop: 1
+          push:
+            dot1q: 800
+            pcp: 5
+            dei: true
+      101:
+        encapsulation:
+          dot1q: 101
+        l2-rewrite: {}
+      102:
+        encapsulation:
+          dot1ad: 102
+          inner-dot1q: 200
+        l2-rewrite:
+          pop: 2
+          push:
+            dot1ad: 900
+            inner-dot1q: 901
+            inner-pcp: 3
+      103:
+        encapsulation:
+          dot1q: 103
+        l2xc: GigabitEthernet1/0/1
+        l2-rewrite:
+          pop: 1
+  GigabitEthernet1/0/1:
+    mtu: 9000
+    l2xc: GigabitEthernet1/0/0.103
+    l2-rewrite:
+      push:
+        dot1q: 1000
+bridgedomains:
+  bd10:
+    mtu: 9000
+    interfaces: [ GigabitEthernet1/0/0.100, GigabitEthernet1/0/0.101, GigabitEthernet1/0/0.102 ]

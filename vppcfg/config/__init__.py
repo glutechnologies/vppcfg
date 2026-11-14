@@ -39,6 +39,7 @@ from .tap import validate_taps
 from .prefixlist import validate_prefixlists
 from .acl import validate_acls
 from .sflow import validate_sflow
+from .l2rewrite import validate_l2_rewrites
 
 
 class IPInterfaceWithPrefixLength(validators.Validator):
@@ -94,6 +95,7 @@ class Validator:
             validate_prefixlists,
             validate_acls,
             validate_sflow,
+            validate_l2_rewrites,
         ]
 
     def validate(self, yaml):

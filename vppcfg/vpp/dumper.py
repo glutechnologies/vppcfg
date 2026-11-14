@@ -20,6 +20,7 @@ interface metadata and write it to a YAML file.
 import sys
 import yaml
 from vppcfg.config import bondethernet
+from . import l2rewrite
 from .vppapi import VPPApi
 
 
@@ -50,6 +51,29 @@ class Dumper(VPPApi):
             with open(outfile, "w", encoding="utf-8") as file:
                 print(yaml.dump(config), file=file)
         self.logger.info(f"Wrote YAML config to {outfile}")
+
+    def _l2_rewrite_to_config(self, iface, config_iface):
+        """Set 'l2-rewrite' on the configuration of interface iface when its VLAN tag
+        rewrite in VPP is not the one vppcfg sets without it: bridge-domain members and
+        L2XC sources pop all their tags, other interfaces rewrite nothing."""
+        vtr = l2rewrite.vtr_of(iface)
+        rewrite = l2rewrite.from_vtr(vtr)
+        if rewrite is None:
+            self.logger.warning(
+                f"Not exporting the unknown tag-rewrite {vtr} of {iface.interface_name}"
+            )
+            return
+        members = {
+            member.sw_if_index
+            for bridge in self.cache["bridgedomains"].values()
+            for member in bridge.sw_if_details
+            if member.sw_if_index != bridge.bvi_sw_if_index
+        }
+        default = {"pop": 0, "push": []}
+        if iface.sw_if_index in members or iface.sw_if_index in self.cache["l2xcs"]:
+            default["pop"] = iface.sub_number_of_tags
+        if rewrite != default:
+            config_iface["l2-rewrite"] = l2rewrite.to_config(rewrite)
 
     def cache_to_config(self):
         """Convert the VPP configuration cache (previously read by readconfig() into
@@ -147,6 +171,7 @@ class Dumper(VPPApi):
                         i["l2xc"] = self.cache["interfaces"][
                             l2xc.tx_sw_if_index
                         ].interface_name
+                    self._l2_rewrite_to_config(iface, i)
                     if (
                         not self.cache["interfaces"][idx].flags & 1
                     ):  # IF_STATUS_API_FLAG_ADMIN_UP

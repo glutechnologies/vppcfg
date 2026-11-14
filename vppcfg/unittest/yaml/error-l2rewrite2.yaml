@@ -1,0 +1,38 @@
+test:
+  description: "A pushed VLAN tag is dot1q or dot1ad, and an inner PCP or DEI needs an inner tag"
+  errors:
+    expected:
+     - "interface .* l2-rewrite push needs one of dot1q or dot1ad"
+     - "interface .* l2-rewrite push has inner-.* without inner-dot1q"
+    count: 4
+---
+interfaces:
+  GigabitEthernet1/0/0:
+    mtu: 9000
+    sub-interfaces:
+      100:
+        encapsulation:
+          dot1q: 100
+        l2-rewrite:
+          pop: 1
+          push:
+            dot1q: 800
+            dot1ad: 801
+      101:
+        encapsulation:
+          dot1q: 101
+        l2-rewrite:
+          push:
+            pcp: 1
+      102:
+        encapsulation:
+          dot1q: 102
+        l2-rewrite:
+          push:
+            dot1q: 802
+            inner-pcp: 1
+            inner-dei: true
+bridgedomains:
+  bd10:
+    mtu: 9000
+    interfaces: [ GigabitEthernet1/0/0.100, GigabitEthernet1/0/0.101, GigabitEthernet1/0/0.102 ]
