@@ -1,0 +1,22 @@
+test:
+  description: "A split-horizon group is between 1 and 255"
+  errors:
+    expected:
+     - "yamale:.*split-horizon.*: 0 is less than 1"
+     - "yamale:.*split-horizon.*: 256 is greater than 255"
+    count: 2
+---
+interfaces:
+  GigabitEthernet1/0/0:
+    sub-interfaces:
+      100:
+        description: "Group 0 is no group: leave the interface out of split-horizon"
+      101:
+        description: "VPP keeps the group in 8 bits"
+
+bridgedomains:
+  bd10:
+    interfaces: [ GigabitEthernet1/0/0.100, GigabitEthernet1/0/0.101 ]
+    split-horizon:
+      GigabitEthernet1/0/0.100: 0
+      GigabitEthernet1/0/0.101: 256

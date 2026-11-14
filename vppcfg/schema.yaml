@@ -19,6 +19,7 @@ bridgedomain:
   mtu: int(min=128,max=9216,required=False)
   bvi: str(matches='loop[0-9]+',required=False)
   interfaces: list(str(),required=False)
+  split-horizon: map(int(min=1,max=255),key=str(),required=False)
   settings: include('bridgedomain-settings',required=False)
 ---
 bridgedomain-settings:

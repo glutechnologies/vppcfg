@@ -38,6 +38,9 @@ bridgedomains:
     description: "Bridge Domain 10"
     mtu: 3000
     interfaces: [ HundredGigabitEthernet13/0/0.101, GigabitEthernet3/0/0.101, vxlan_tunnel1 ]
+    split-horizon:
+      HundredGigabitEthernet13/0/0.101: 1
+      GigabitEthernet3/0/0.101: 1
 
 vxlan_tunnels:
   vxlan_tunnel0:

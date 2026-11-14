@@ -205,11 +205,19 @@ class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-meth
                     for x in bridge_sw_if_index_list
                     if x in self.vpp.cache["interfaces"]
                 ]
+                bridge_shgs = {
+                    self.vpp.cache["interfaces"][x.sw_if_index].interface_name: int(
+                        x.shg or 0
+                    )
+                    for x in vpp_bridge.sw_if_details
+                    if x.sw_if_index in self.vpp.cache["interfaces"]
+                }
             else:
                 ## New BridgeDomain
                 vpp_bridge = None
                 bvi_sw_if_index = -1
                 bridge_members = []
+                bridge_shgs = {}
 
             config_bridge_ifname, config_bridge_iface = bridgedomain.get_by_name(
                 self.cfg, f"bd{int(instance)}"
@@ -263,8 +271,18 @@ class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-meth
                     member_ifname, _member_iface = interface.get_by_name(
                         self.cfg, member_ifname
                     )
-                    if not member_ifname in bridge_members:
+                    shg = bridgedomain.get_split_horizon_group(
+                        self.cfg, config_bridge_ifname, member_ifname
+                    )
+                    ## A member in another split-horizon group is set into the bridge
+                    ## again, with the group of the config.
+                    if (
+                        not member_ifname in bridge_members
+                        or bridge_shgs.get(member_ifname, 0) != shg
+                    ):
                         cli = f"set interface l2 bridge {member_ifname} {int(instance)}"
+                        if shg:
+                            cli += f" {int(shg)}"
                         self.cli["sync"].append(cli)
                         operation = "disable"
                         if interface.is_qinx(self.cfg, member_ifname):
