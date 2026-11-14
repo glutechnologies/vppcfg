@@ -118,6 +118,12 @@ BridgeDomains are required to be named `bdN` where N in [1, 65536). Note that br
 *   ***interfaces***: A list of zero or more interfaces or sub-interfaces that are bridge
     members. If the bridge has a `BVI`, it MUST NOT appear in this list. Bridges are allowed to
     exist with no member interfaces.
+*   ***split-horizon***: An optional map of member interface to its split-horizon group, an
+    integer between [1,255]. Members not in the map are in group 0, which is VPP's default.
+    A frame received on a member is not forwarded to the other members of the same (non-zero)
+    group. Every interface in the map must be in `interfaces`. This is what builds a
+    rooted-multipoint (E-Tree) service: the leaves share a group, the roots stay in group 0,
+    so leaves reach roots but not each other.
 *   ***settings***: A map of bridge-domain settings to further manipulate its behavior:
     *   ***learn***: A boolean that turns learning on/off. Default True.
     *   ***unicast-flood***: A boolean that turns unicast flooding on/off. Default True.
@@ -143,6 +149,12 @@ bridgedomains:
     mtu: 2000
     bvi: loop1
     interfaces: [ BondEthernet0.500, HundredGigabitEthernet12/0/1, vxlan_tunnel1 ]
+  bd12:
+    description: "Rooted-multipoint: .600 is the root, .601 and .602 are leaves"
+    interfaces: [ BondEthernet0.600, BondEthernet0.601, BondEthernet0.602 ]
+    split-horizon:
+      BondEthernet0.601: 1
+      BondEthernet0.602: 1
   bd11:
     description: "No members, default 1500 byte MTU, with (default) settings"
     settings:

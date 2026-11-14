@@ -270,6 +270,7 @@ class Dumper(VPPApi):
                 mtu = bvi.mtu[0]
                 bridge["bvi"] = bvi.interface_name
             members = []
+            split_horizon = {}
             for member in iface.sw_if_details:
                 if (
                     bvi
@@ -277,12 +278,17 @@ class Dumper(VPPApi):
                     == self.cache["interfaces"][member.sw_if_index].interface_name
                 ):
                     continue
-                members.append(
-                    self.cache["interfaces"][member.sw_if_index].interface_name
-                )
+                member_ifname = self.cache["interfaces"][
+                    member.sw_if_index
+                ].interface_name
+                members.append(member_ifname)
+                if member.shg:
+                    split_horizon[member_ifname] = int(member.shg)
                 mtu = self.cache["interfaces"][member.sw_if_index].mtu[0]
             if len(members) > 0:
                 bridge["interfaces"] = members
+            if split_horizon:
+                bridge["split-horizon"] = split_horizon
             bridge["mtu"] = mtu
             config["bridgedomains"][bridge_name] = bridge
         for idx, acl in self.cache["acls"].items():

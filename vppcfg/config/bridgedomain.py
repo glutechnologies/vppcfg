@@ -12,6 +12,7 @@
 # limitations under the License.
 #
 """A vppcfg configuration module that handles bridgedomains"""
+
 import logging
 from . import interface
 from . import loopback
@@ -79,6 +80,15 @@ def bvi_unique(yaml, bviname):
         if "bvi" in iface and iface["bvi"] == bviname:
             ncount += 1
     return ncount < 2
+
+
+def get_split_horizon_group(yaml, ifname, member):
+    """Return the split-horizon group of the interface 'member' in the bridgedomain
+    identified by 'ifname' (bd10), or 0 (no group, VPP's default) if it has none."""
+    ifname, iface = get_by_name(yaml, ifname)
+    if not iface or "split-horizon" not in iface:
+        return 0
+    return int(iface["split-horizon"].get(member, 0))
 
 
 def get_settings(yaml, ifname):
@@ -181,6 +191,15 @@ def validate_bridgedomains(yaml):
                 if member_mtu != bd_mtu:
                     msgs.append(
                         f"bridgedomain {ifname} member {member} has MTU {int(member_mtu)}, while bridge has {int(bd_mtu)}"
+                    )
+                    result = False
+
+        if "split-horizon" in iface:
+            members = iface.get("interfaces", [])
+            for member in iface["split-horizon"]:
+                if member not in members:
+                    msgs.append(
+                        f"bridgedomain {ifname} split-horizon member {member} is not in its interfaces"
                     )
                     result = False
 

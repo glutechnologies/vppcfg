@@ -58,6 +58,8 @@ bridgedomains:
     description: "Bridge Domain 11"
     mtu: 3000
     interfaces: [ HundredGigabitEthernet13/0/0.101, GigabitEthernet3/0/0.101, vxlan_tunnel11 ]
+    split-horizon:
+      GigabitEthernet3/0/0.101: 2
     bvi: loop11
 
 vxlan_tunnels:

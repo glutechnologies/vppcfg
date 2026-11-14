@@ -13,6 +13,7 @@
 #
 # -*- coding: utf-8 -*-
 """Unit tests for bridgedomains"""
+
 import unittest
 import yaml
 from . import bridgedomain
@@ -96,3 +97,33 @@ class TestBridgeDomainMethods(unittest.TestCase):
         self.assertFalse(settings["unknown-unicast-flood"])
         self.assertFalse(settings["unicast-flood"])
         self.assertEqual(settings["mac-age-minutes"], 10)
+
+    def test_get_split_horizon_group(self):
+        self.assertEqual(
+            bridgedomain.get_split_horizon_group(
+                self.cfg, "bd11", "GigabitEthernet2/0/1.100"
+            ),
+            1,
+        )
+        self.assertEqual(
+            bridgedomain.get_split_horizon_group(self.cfg, "bd11", "BondEthernet0.100"),
+            2,
+        )
+        self.assertEqual(
+            bridgedomain.get_split_horizon_group(
+                self.cfg, "bd11", "GigabitEthernet2/0/0.100"
+            ),
+            0,
+        )
+        self.assertEqual(
+            bridgedomain.get_split_horizon_group(
+                self.cfg, "bd10", "GigabitEthernet1/0/0"
+            ),
+            0,
+        )
+        self.assertEqual(
+            bridgedomain.get_split_horizon_group(
+                self.cfg, "bd-notexist", "GigabitEthernet1/0/0"
+            ),
+            0,
+        )

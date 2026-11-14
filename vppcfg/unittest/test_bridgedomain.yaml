@@ -54,6 +54,9 @@ bridgedomains:
     description: "Bridge Domain 11, with sub-interfaces and settings"
     mtu: 2000
     interfaces: [ GigabitEthernet2/0/0.100, GigabitEthernet2/0/1.100, BondEthernet0.100 ]
+    split-horizon:
+      GigabitEthernet2/0/1.100: 1
+      BondEthernet0.100: 2
     settings:
       mac-age-minutes: 10
       unicast-flood: False

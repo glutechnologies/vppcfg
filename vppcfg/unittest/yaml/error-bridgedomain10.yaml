@@ -1,0 +1,27 @@
+test:
+  description: "Interfaces in a split-horizon group must be members of the bridgedomain"
+  errors:
+    expected:
+     - "bridgedomain .* split-horizon member .* is not in its interfaces"
+    count: 2
+---
+interfaces:
+  GigabitEthernet1/0/0:
+    sub-interfaces:
+      100:
+        description: "A root"
+      101:
+        description: "A leaf"
+      102:
+        description: "Exists, but is not a member of bd10"
+
+bridgedomains:
+  bd10:
+    interfaces: [ GigabitEthernet1/0/0.100, GigabitEthernet1/0/0.101 ]
+    split-horizon:
+      GigabitEthernet1/0/0.101: 1
+      GigabitEthernet1/0/0.102: 1
+  bd11:
+    description: "A group without members"
+    split-horizon:
+      GigabitEthernet1/0/0.102: 2
