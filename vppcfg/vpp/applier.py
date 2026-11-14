@@ -19,6 +19,7 @@ interface metadata.
 
 import logging
 from .vppapi import VPPApi
+from .macfilter import NEW_TABLE
 
 
 class Applier(VPPApi):
@@ -47,9 +48,23 @@ class Applier(VPPApi):
 
         cli_calls = 0
         cli_success = 0
+        new_table = None
         for phase, cmds in self.cli.items():
             for cmd in cmds:
                 cli_calls += 1
+
+                if NEW_TABLE in cmd.split():
+                    if new_table is None:
+                        self.logger.error(f"No classify table was created for: {cmd}")
+                        continue
+                    cmd = " ".join(
+                        str(new_table) if word == NEW_TABLE else word
+                        for word in cmd.split()
+                    )
+                creates_table = self.creates_classify_table(cmd)
+                if creates_table:
+                    new_table = None
+                    before = self.classify_table_ids()
 
                 self.logger.debug(f"{phase}: {cmd}")
                 ret = self.cli_inband(cmd=cmd)
@@ -57,6 +72,13 @@ class Applier(VPPApi):
 
                 if ret is False:
                     self.logger.error("VPP returned error")
+                elif ret.retval == 0 and creates_table:
+                    created = self.classify_table_ids() - before
+                    if len(created) == 1:
+                        new_table = created.pop()
+                        cli_success += 1
+                    else:
+                        self.logger.warning(f"VPP {cmd} created tables {created}")
                 elif ret.retval == 0:
                     cli_success += 1
                 else:
@@ -71,3 +93,20 @@ class Applier(VPPApi):
             self.logger.warning("Not all VPP calls were successful!")
             return False
         return True
+
+    @staticmethod
+    def creates_classify_table(cmd):
+        """Return True if the CLI statement cmd creates a classify table, rather
+        than changing or deleting one."""
+        words = cmd.split()
+        return words[:2] == ["classify", "table"] and not {
+            "del",
+            "del-chain",
+            "table",
+        } & set(words[2:])
+
+    def classify_table_ids(self):
+        """Return the set of the indexes of the classify tables in VPP."""
+        if not self.connected and not self.connect():
+            return set()
+        return set(self.vpp.api.classify_table_ids().ids)

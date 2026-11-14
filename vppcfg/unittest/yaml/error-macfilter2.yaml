@@ -1,0 +1,26 @@
+test:
+  description: "A mac-filter-output names an existing MAC filter, on an L2 interface"
+  errors:
+    expected:
+     - "interface .* mac-filter-output .* does not exist"
+     - "interface .* mac-filter-output .* needs an L2 interface"
+    count: 2
+---
+mac-filters:
+  one:
+    mask: [ src ]
+    miss: deny
+    entries:
+      - src: 02:00:00:00:00:01
+
+interfaces:
+  GigabitEthernet1/0/0:
+    sub-interfaces:
+      100:
+        mac-filter-output: two
+      101:
+        mac-filter-output: one
+
+bridgedomains:
+  bd10:
+    interfaces: [ GigabitEthernet1/0/0.100 ]

@@ -1,0 +1,28 @@
+mac-filters:
+  only-the-router:
+    mask: [ src ]
+    miss: deny
+    entries:
+      - src: 74-4D-28-80-DF-D6
+  no-pairs:
+    mask: [ src, dst ]
+    miss: permit
+    entries:
+      - { src: 02:00:00:00:00:01, dst: 02:00:00:00:00:02 }
+  nothing:
+    mask: [ dst ]
+    miss: deny
+
+interfaces:
+  GigabitEthernet1/0/0:
+    sub-interfaces:
+      100:
+        mac-filter-output: only-the-router
+      101:
+        mac-filter-output: no-pairs
+      102:
+        description: "No MAC filter"
+
+bridgedomains:
+  bd10:
+    interfaces: [ GigabitEthernet1/0/0.100, GigabitEthernet1/0/0.101, GigabitEthernet1/0/0.102 ]

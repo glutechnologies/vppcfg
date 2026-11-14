@@ -19,6 +19,8 @@ from vppcfg.config import loopback
 from vppcfg.config import interface
 from vppcfg.config import bondethernet
 from vppcfg.config import bridgedomain
+from vppcfg.config import macfilter
+from . import macfilter as vpp_macfilter
 from .planner_base import PlannerBase
 
 
@@ -39,6 +41,9 @@ class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-meth
             ret = False
         if not self._sync_l2xcs():
             self.logger.warning("Could not sync L2 Cross Connects in VPP")
+            ret = False
+        if not self._sync_mac_filters():
+            self.logger.warning("Could not sync MAC filters in VPP")
             ret = False
         if not self._sync_mtu():
             self.logger.warning("Could not sync interface MTU in VPP")
@@ -68,6 +73,67 @@ class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-meth
             self.logger.warning("Could not sync interface tags in VPP")
             ret = False
         return ret
+
+    def _sync_mac_filters(self):
+        """Give each interface with a mac-filter-output a classify table with its MAC
+        filter, as its L2 output ACL table. A table of the right mask and miss action
+        that only this interface uses gets the entries added or deleted; any other
+        is replaced by a new table, which is set on the interface before the old
+        one is deleted."""
+        users = {}
+        for table_id in self.vpp.cache["interface_l2_output_tables"].values():
+            users[table_id] = users.get(table_id, 0) + 1
+
+        for ifname in macfilter.get_mac_filter_interfaces(self.cfg):
+            _name, mac_filter = macfilter.get_by_name(
+                self.cfg, macfilter.get_interface_mac_filter(self.cfg, ifname)
+            )
+            mask = macfilter.get_mask(mac_filter)
+            miss = mac_filter["miss"]
+            entries = macfilter.get_entries(mac_filter)
+
+            current = None
+            vpp_iface = self.vpp.get_interface_by_name(ifname)
+            if vpp_iface:
+                if self.vpp.is_foreign_interface(vpp_iface.sw_if_index):
+                    continue
+                current = self.vpp.cache["interface_l2_output_tables"].get(
+                    vpp_iface.sw_if_index
+                )
+            table = self.vpp.cache["classify_tables"].get(current)
+            if table and users[current] == 1:
+                if vpp_macfilter.table_form(table) == (mask, miss):
+                    have = vpp_macfilter.table_entries(table, mask, miss)
+                    if have is not None:
+                        for values in sorted(entries - have):
+                            self.cli["sync"].append(
+                                vpp_macfilter.cli_session(current, mask, values, miss)
+                            )
+                        for values in sorted(have - entries):
+                            self.cli["sync"].append(
+                                vpp_macfilter.cli_session(
+                                    current, mask, values, miss, delete=True
+                                )
+                            )
+                        continue
+
+            new = vpp_macfilter.NEW_TABLE
+            self.cli["sync"].append(vpp_macfilter.cli_table(mac_filter))
+            for values in sorted(entries):
+                self.cli["sync"].append(
+                    vpp_macfilter.cli_session(new, mask, values, miss)
+                )
+            if current is not None:
+                self.cli["sync"].append(
+                    f"set interface output acl intfc {ifname} l2-table {current} del"
+                )
+                users[current] -= 1
+            self.cli["sync"].append(
+                f"set interface output acl intfc {ifname} l2-table {new}"
+            )
+            if current is not None and users[current] == 0 and table:
+                self.cli["sync"].append(f"classify table del table {current}")
+        return True
 
     def _sync_tags(self):
         """Stamp our ownership tag onto every interface we own that does not yet

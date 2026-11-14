@@ -38,6 +38,7 @@ from .vxlan_tunnel import validate_vxlan_tunnels
 from .tap import validate_taps
 from .prefixlist import validate_prefixlists
 from .acl import validate_acls
+from .macfilter import validate_mac_filters
 from .sflow import validate_sflow
 
 
@@ -93,6 +94,7 @@ class Validator:
             validate_taps,
             validate_prefixlists,
             validate_acls,
+            validate_mac_filters,
             validate_sflow,
         ]
 

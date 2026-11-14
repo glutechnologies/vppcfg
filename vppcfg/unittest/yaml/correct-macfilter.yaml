@@ -1,0 +1,39 @@
+test:
+  description: "A few correct examples of well formed MAC filters"
+  errors:
+    count: 0
+---
+mac-filters:
+  only-the-router:
+    description: "Let through only what the router sends"
+    mask: [ src ]
+    miss: deny
+    entries:
+      - src: 74:4d:28:80:df:d6
+  no-pairs:
+    mask: [ dst, src ]
+    miss: permit
+    entries:
+      - { src: 02:00:00:00:00:01, dst: 02:00:00:00:00:02 }
+      - { src: 02-00-00-00-00-02, dst: 02-00-00-00-00-01 }
+  nothing:
+    mask: [ dst ]
+    miss: deny
+
+interfaces:
+  GigabitEthernet1/0/0:
+    mac-filter-output: only-the-router
+    sub-interfaces:
+      100:
+        mac-filter-output: no-pairs
+      101:
+        mac-filter-output: no-pairs
+      102:
+        encapsulation: { dot1q: 102 }
+        mac-filter-output: nothing
+  GigabitEthernet1/0/1:
+    l2xc: GigabitEthernet1/0/0
+
+bridgedomains:
+  bd10:
+    interfaces: [ GigabitEthernet1/0/0.100, GigabitEthernet1/0/0.101, GigabitEthernet1/0/0.102 ]

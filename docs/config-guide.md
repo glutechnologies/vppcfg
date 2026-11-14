@@ -371,6 +371,9 @@ exist as a PHY in VPP (ie. `HundredGigabitEthernet12/0/0`) or as a specified `Bo
     devices often only do with `vfio-pci`, `af-packet` interfaces and TAPs do). The TAP of an LCP
     created by `vppcfg apply` gets its mode in a second pass of the same run, so `vppcfg plan`
     does not list it.
+*   ***mac-filter-output***: An optional name of a MAC filter (see _MAC Filters_ below) that
+    this interface applies to the frames it sends. It is only allowed on L2 interfaces
+    (bridge-domain members, L2XC sources and targets), on interfaces and sub-interfaces alike.
 
 Further, top-level interfaces, that is to say those that do not have an encapsulation, are permitted
 to have any number of sub-interfaces specified by `subid`, an integer between [0,2G), which further
@@ -559,6 +562,48 @@ interfaces:
 The configuration here is tolerant of either a singleton (a literal string referring to the one
 ACL that must be applied), or a _list_ of strings to more than one ACL, in which case they will
 be tested in order (with a first-match return value).
+
+### MAC Filters
+
+A MAC filter drops or lets through the frames that an L2 interface sends, by their Ethernet
+source and/or destination MAC address. Filters are defined by name in the `mac-filters`
+section, and an interface or sub-interface applies one with `mac-filter-output`. Names match
+the regular expression `[a-z][a-z0-9-]+`. A filter has the following fields:
+
+*   ***description***: An optional string, no longer than 64 characters, and excluding the
+    single quote ' and double quote ".
+*   ***mask***: A list of the fields the filter matches on: `src`, `dst` or both.
+*   ***miss***: What happens to a frame that matches none of the entries: `deny` drops it, so
+    the entries are the frames let through; `permit` lets it through, so the entries are the
+    frames dropped.
+*   ***entries***: An optional list of up to 1000 entries, each with exactly the fields of the
+    mask (`src` and/or `dst`), each a MAC address. An entry may not be listed twice.
+
+```
+mac-filters:
+  only-the-router:
+    mask: [ src ]
+    miss: deny
+    entries:
+      - src: 74:4d:28:80:df:d6
+
+interfaces:
+  GigabitEthernet3/0/0:
+    sub-interfaces:
+      1003:
+        encapsulation: { dot1q: 768 }
+        mac-filter-output: only-the-router
+```
+
+In VPP, each interface with a MAC filter gets a classify table of its own (skip 0, match 1),
+set as its L2 output ACL: `classify table acl-miss-next <miss> mask l2 <mask>`, one `classify
+session` per entry with the other action as `acl-hit-next`, and `set interface output acl intfc
+<interface> l2-table <index>`. A change of entries is made in the same table; a change of
+mask or miss action makes a new table, which is set on the interface before the old one is
+deleted. VPP picks the index of a new table itself, so the plan refers to it as `$new-table`,
+the table made by the last `classify table` statement before it: `vppcfg apply` puts in its
+index, but such a plan cannot be run with `vppctl exec` as it is. `vppcfg dump` exports the
+L2 output ACL tables that are MAC filters as `vppmacfilter<index>`.
 
 ### sFlow collection
 
