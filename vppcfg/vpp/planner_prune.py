@@ -21,6 +21,7 @@ from vppcfg.config import bondethernet
 from vppcfg.config import bridgedomain
 from vppcfg.config import vxlan_tunnel
 from vppcfg.config import tap
+from vppcfg.config import macfilter
 from .planner_base import PlannerBase
 
 
@@ -32,6 +33,7 @@ class PlannerPruneOperations(PlannerBase):  # pylint: disable=too-few-public-met
         of how and why this particular pruning order is chosen, see README.md section on
         Planning."""
         ret = True
+        mac_filter_bindings = self._mac_filter_bindings()
         if not self._prune_admin_state():
             self.logger.warning("Could not set interfaces down in VPP")
             ret = False
@@ -62,7 +64,47 @@ class PlannerPruneOperations(PlannerBase):  # pylint: disable=too-few-public-met
         if not self._prune_phys():
             self.logger.warning("Could not prune PHYs from VPP")
             ret = False
+        if not self._prune_mac_filters(mac_filter_bindings):
+            self.logger.warning("Could not prune MAC filters from VPP")
+            ret = False
         return ret
+
+    def _mac_filter_bindings(self):
+        """The L2 output ACL tables of our interfaces, as {sw_if_index: (ifname,
+        table_id)}, before anything is pruned."""
+        ret = {}
+        for idx, table_id in self.vpp.cache["interface_l2_output_tables"].items():
+            if self.vpp.is_foreign_interface(idx):
+                continue
+            ret[idx] = (self.vpp.cache["interfaces"][idx].interface_name, table_id)
+        return ret
+
+    def _prune_mac_filters(self, bindings):
+        """Remove the MAC filter of each interface that has none in the config, or that
+        this prune deletes, and the classify table of that filter once no interface uses
+        it. VPP keeps the output ACL table of an interface it deletes, and would keep it
+        for the next interface that gets its sw_if_index, so these statements go first,
+        before the interfaces are deleted. A filter that has to change is replaced in the
+        sync phase, so that the interface is never without it."""
+        users = {}
+        for table_id in self.vpp.cache["interface_l2_output_tables"].values():
+            users[table_id] = users.get(table_id, 0) + 1
+
+        cli = []
+        for idx, (ifname, table_id) in sorted(bindings.items()):
+            deleted = idx not in self.vpp.cache["interfaces"]
+            if not deleted and macfilter.get_interface_mac_filter(self.cfg, ifname):
+                continue
+            cli.append(
+                f"set interface output acl intfc {ifname} l2-table {table_id} del"
+            )
+            del self.vpp.cache["interface_l2_output_tables"][idx]
+            users[table_id] -= 1
+            if users[table_id] == 0 and table_id in self.vpp.cache["classify_tables"]:
+                cli.append(f"classify table del table {table_id}")
+                del self.vpp.cache["classify_tables"][table_id]
+        self.cli["prune"] = cli + self.cli["prune"]
+        return True
 
     def _prune_unnumbered_usage(self, target_ifname):
         """Remove the unnumbered use of all VPP interfaces that are using the given 'target_ifname'."""

@@ -21,6 +21,7 @@ import sys
 import yaml
 from vppcfg.config import bondethernet
 from .vppapi import VPPApi
+from . import macfilter
 
 
 class Dumper(VPPApi):
@@ -63,6 +64,7 @@ class Dumper(VPPApi):
             "taps": {},
             "prefixlists": {},
             "acls": {},
+            "mac-filters": {},
             "sflow": {},
         }
         for idx, bond_iface in self.cache["bondethernets"].items():
@@ -359,9 +361,46 @@ class Dumper(VPPApi):
 
             config["acls"][aclname] = config_acl
 
+        self._mac_filters_to_config(config)
+
         config["sflow"] = self.cache["sflow"]
         for hw_if_index in self.cache["interface_sflow"]:
             vpp_iface = self.cache["interfaces"][hw_if_index]
             config["interfaces"][vpp_iface.interface_name]["sflow"] = True
 
         return config
+
+    def _mac_filters_to_config(self, config):
+        """Export the L2 output ACL table of each exported interface that is a MAC
+        filter, as mac-filter 'vppmacfilter<table index>'."""
+        for idx, table_id in sorted(self.cache["interface_l2_output_tables"].items()):
+            iface = self.cache["interfaces"][idx]
+            config_iface = None
+            if iface.interface_name in config["interfaces"]:
+                config_iface = config["interfaces"][iface.interface_name]
+            elif iface.sub_number_of_tags > 0:
+                sup = self.cache["interfaces"][iface.sup_sw_if_index]
+                subs = (
+                    config["interfaces"]
+                    .get(sup.interface_name, {})
+                    .get("sub-interfaces", {})
+                )
+                config_iface = subs.get(iface.sub_id)
+            if config_iface is None:
+                continue
+            table = self.cache["classify_tables"].get(table_id)
+            form = macfilter.table_form(table) if table else None
+            entries = macfilter.table_entries(table, *form) if form else None
+            if entries is None:
+                self.logger.warning(
+                    f"interface {iface.interface_name} L2 output ACL table {table_id} is not a MAC filter, skipping"
+                )
+                continue
+            mask, miss = form
+            name = f"vppmacfilter{table_id}"
+            config["mac-filters"][name] = {
+                "mask": mask,
+                "miss": miss,
+                "entries": [dict(zip(mask, values)) for values in sorted(entries)],
+            }
+            config_iface["mac-filter-output"] = name

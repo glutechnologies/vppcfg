@@ -165,6 +165,8 @@ class VPPApi:
             "acl_tags": {},
             "interface_sflow": {},
             "sflow": {},
+            "classify_tables": {},
+            "interface_l2_output_tables": {},
         }
         return True
 
@@ -490,8 +492,38 @@ class VPPApi:
         self.logger.debug("Retrieving bondethernets")
         api_response = self.vpp.api.sw_bond_interface_dump()
 
+        self._read_classify()
+
         self.cache_read = True
         return self.cache_read
+
+    def _read_classify(self):
+        """Read the classify tables, with their sessions, and the L2 output ACL table of
+        each interface, which is where MAC filters live. VPP has no API call for the
+        output ACLs of an interface, so these are read from 'show outacl type l2'."""
+        self.logger.debug("Retrieving classify tables")
+        api_response = self.vpp.api.classify_table_ids()
+        for table_id in api_response.ids:
+            info = self.vpp.api.classify_table_info(table_id=table_id)
+            sessions = self.vpp.api.classify_session_dump(table_id=table_id)
+            self.cache["classify_tables"][table_id] = {
+                "info": info,
+                "sessions": list(sessions),
+            }
+
+        self.logger.debug("Retrieving interface L2 output ACL tables")
+        ret = self.vpp.api.cli_inband(cmd="show outacl type l2")
+        for line in ret.reply.splitlines():
+            fields = line.split()
+            if len(fields) < 3 or not fields[0].isdigit() or not fields[1].isdigit():
+                continue
+            sw_if_index, table_id = int(fields[0]), int(fields[1])
+            if sw_if_index not in self.cache["interfaces"]:
+                self.logger.warning(
+                    f"L2 output ACL table {table_id} is set on interface {sw_if_index}, which does not exist"
+                )
+                continue
+            self.cache["interface_l2_output_tables"][sw_if_index] = table_id
 
     def phys_exist(self, ifname_list):
         """Return True if all interfaces in the `ifname_list` exist as physical interface names

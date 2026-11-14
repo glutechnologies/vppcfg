@@ -1,0 +1,21 @@
+test:
+  description: "An entry of a MAC filter has exactly the fields of its mask, once"
+  errors:
+    expected:
+     - "mac-filter .* entry .* has .*, not the fields of its mask: .*"
+     - "mac-filter .* entry .* is a duplicate"
+    count: 3
+---
+mac-filters:
+  src-only:
+    mask: [ src ]
+    miss: deny
+    entries:
+      - src: 02:00:00:00:00:01
+      - dst: 02:00:00:00:00:02
+      - src: 02-00-00-00-00-01
+  both:
+    mask: [ src, dst ]
+    miss: permit
+    entries:
+      - src: 02:00:00:00:00:01

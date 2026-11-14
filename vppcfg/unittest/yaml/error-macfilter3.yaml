@@ -1,0 +1,21 @@
+test:
+  description: "A MAC filter has a mask of src and/or dst, and a miss action of deny or permit"
+  errors:
+    expected:
+     - "yamale: mac-filters.bad-field.mask.0: 'proto' not in .*"
+     - "yamale: mac-filters.bad-miss.miss: 'accept' not in .*"
+     - "yamale: mac-filters.bad-mac.entries.0.src: '02:00:00:00:00' is not a mac"
+    count: 3
+---
+mac-filters:
+  bad-field:
+    mask: [ proto ]
+    miss: deny
+  bad-miss:
+    mask: [ src ]
+    miss: accept
+  bad-mac:
+    mask: [ src ]
+    miss: deny
+    entries:
+      - src: 02:00:00:00:00
