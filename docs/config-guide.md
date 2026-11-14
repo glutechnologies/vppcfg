@@ -139,8 +139,9 @@ BridgeDomains are required to be named `bdN` where N in [1, 65536). Note that br
 
 Any member sub-interfaces that are added, will automatically be configured to tag-rewrite the
 number of tags they have, so a simple dot1q sub-interface will be configured as `pop 1`, while
-a QinQ or QinAD sub-interface will be configured as `pop 2`. Conversely, when interfaces are
-removed from the bridge, their tag-rewriting will be disabled.
+a QinQ or QinAD sub-interface will be configured as `pop 2`, unless they have an `l2-rewrite`
+(see Interfaces). Conversely, when interfaces are removed from the bridge, their tag-rewriting
+will be disabled.
 
 Examples:
 ```
@@ -374,6 +375,25 @@ exist as a PHY in VPP (ie. `HundredGigabitEthernet12/0/0`) or as a specified `Bo
 *   ***mac-filter-output***: An optional name of a MAC filter (see _MAC Filters_ below) that
     this interface applies to the frames it sends. It is only allowed on L2 interfaces
     (bridge-domain members, L2XC sources and targets), on interfaces and sub-interfaces alike.
+*   ***l2-rewrite***: An optional VLAN tag rewrite of an L2 interface (a bridge-domain member,
+    or an L2XC source or target). It replaces the default rewrite of bridge-domain members and
+    L2XC sources, which pops all the tags of their encapsulation. The interface pops `pop` tags
+    from the frames it receives and then pushes the tags of `push`, and does the reverse on the
+    frames it sends:
+    *   ***pop***: The number of outer tags to remove, 0 (the default), 1 or 2. At most the
+        number of tags of the encapsulation.
+    *   ***push***: The tags to add, outer first:
+        *   ***dot1q*** or ***dot1ad***: The VLAN id of the outer tag, an integer between
+            [0,4096), and its type.
+        *   ***pcp***, ***dei***: The priority (an integer between [0,8)) and drop eligible
+            indicator (a boolean) of the outer tag. Default 0 and False.
+        *   ***inner-dot1q***: The VLAN id of an inner Dot1Q tag, an integer between [0,4096).
+        *   ***inner-pcp***, ***inner-dei***: As `pcp` and `dei`, for the inner tag.
+
+    An empty `l2-rewrite: {}` rewrites nothing. A `pop` with a `push` translates tags (VPP's
+    `translate 1-1`, `1-2`, `2-1` and `2-2`). VPP takes each pushed tag as its 16 bit TCI, so
+    PCP and DEI are written as configured; on the frames it sends, VPP pushes back the tags of
+    the encapsulation, with PCP 0.
 
 Further, top-level interfaces, that is to say those that do not have an encapsulation, are permitted
 to have any number of sub-interfaces specified by `subid`, an integer between [0,2G), which further
@@ -428,6 +448,11 @@ interfaces:
         encapsulation:
            dot1q: 100
            exact-match: False
+        l2-rewrite:
+          pop: 1
+          push:
+            dot1q: 1100
+            pcp: 5
       200:
         mtu: 2500
         l2xc: BondEthernet0.100

@@ -68,6 +68,7 @@ interface:
   sflow: bool(required=False)
   rx-mode: enum('polling','interrupt','adaptive',required=False)
   mac-filter-output: str(required=False)
+  l2-rewrite: include('l2-rewrite',required=False)
 ---
 sub-interface:
   description: str(exclude='\'"',len=64,required=False)
@@ -80,12 +81,26 @@ sub-interface:
   state: enum('up', 'down', required=False)
   mpls: bool(required=False)
   mac-filter-output: str(required=False)
+  l2-rewrite: include('l2-rewrite',required=False)
 ---
 encapsulation:
   dot1q: int(min=1,max=4095,required=False)
   dot1ad: int(min=1,max=4095,required=False)
   inner-dot1q: int(min=1,max=4095,required=False)
   exact-match: bool(required=False)
+---
+l2-rewrite:
+  pop: int(min=0,max=2,required=False)
+  push: include('l2-rewrite-push',required=False)
+---
+l2-rewrite-push:
+  dot1q: int(min=0,max=4095,required=False)
+  dot1ad: int(min=0,max=4095,required=False)
+  pcp: int(min=0,max=7,required=False)
+  dei: bool(required=False)
+  inner-dot1q: int(min=0,max=4095,required=False)
+  inner-pcp: int(min=0,max=7,required=False)
+  inner-dei: bool(required=False)
 ---
 tap:
   description: str(exclude='\'"',len=64,required=False)

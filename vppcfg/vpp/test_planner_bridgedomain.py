@@ -114,11 +114,8 @@ class TestPlannerSplitHorizon(unittest.TestCase):
             cli,
             [
                 "set interface l2 bridge GigabitEthernet1/0/0.100 10",
-                "set interface l2 tag-rewrite GigabitEthernet1/0/0.100 pop 1",
                 "set interface l2 bridge GigabitEthernet1/0/0.101 10 1",
-                "set interface l2 tag-rewrite GigabitEthernet1/0/0.101 pop 1",
                 "set interface l2 bridge GigabitEthernet1/0/0.102 10 1",
-                "set interface l2 tag-rewrite GigabitEthernet1/0/0.102 pop 1",
             ],
         )
 
@@ -132,7 +129,6 @@ class TestPlannerSplitHorizon(unittest.TestCase):
             cli,
             [
                 "set interface l2 bridge GigabitEthernet1/0/0.101 10 1",
-                "set interface l2 tag-rewrite GigabitEthernet1/0/0.101 pop 1",
             ],
         )
 
@@ -142,7 +138,6 @@ class TestPlannerSplitHorizon(unittest.TestCase):
             cli,
             [
                 "set interface l2 bridge GigabitEthernet1/0/0.100 10",
-                "set interface l2 tag-rewrite GigabitEthernet1/0/0.100 pop 1",
             ],
         )
 
