@@ -403,12 +403,18 @@ class PlannerSyncOperations(PlannerBase):  # pylint: disable=too-few-public-meth
         manages: those with an 'l2-rewrite', and the bridge-domain members and L2XC
         sources that pop the tags of their encapsulation by default. An interface the
         prune phase reset ('tag-rewrite ... disable'), or that is not in VPP yet, has
-        none."""
+        none. Neither has one that this plan joins to a bridge-domain or cross-connects:
+        VPP may have dropped its rewrite with its L2 mode, as when the other end of its
+        cross-connect is deleted and created again, and setting it again does no harm."""
         reset = set()
         prefix = "set interface l2 tag-rewrite "
         for cli in self.cli["prune"]:
             if cli.startswith(prefix):
                 reset.add(cli[len(prefix) :].split()[0])
+        for prefix in ("set interface l2 bridge ", "set interface l2 xconnect "):
+            for cli in self.cli["sync"]:
+                if cli.startswith(prefix):
+                    reset.add(cli[len(prefix) :].split()[0])
         disabled = (0, 0, 0, 0)
         for ifname in config_l2rewrite.get_l2_rewrite_interfaces(self.cfg):
             rewrite = config_l2rewrite.get_l2_rewrite(self.cfg, ifname)
