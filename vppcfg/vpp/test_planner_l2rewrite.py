@@ -250,6 +250,25 @@ class TestPlannerL2RewriteSync(unittest.TestCase):
             [f"set interface l2 tag-rewrite {SUBS}.101 pop 1"],
         )
 
+    def test_set_again_on_a_new_join(self):
+        ## A source cross-connected again, because the other end was created again,
+        ## gets its rewrite again, whatever the cache said before the plan.
+        sync = [
+            f"set interface l2 xconnect {SUBS}.101 GigabitEthernet1/0/1",
+            f"set interface l2 bridge {SUBS}.100 10",
+        ]
+        planner = Planner(config({}))
+        fill_cache(planner.vpp, POPPED)
+        planner.cli["sync"] = list(sync)
+        self.assertTrue(planner._sync_l2_rewrites())
+        self.assertEqual(
+            planner.cli["sync"][len(sync) :],
+            [
+                f"set interface l2 tag-rewrite {SUBS}.100 pop 1",
+                f"set interface l2 tag-rewrite {SUBS}.101 pop 1",
+            ],
+        )
+
     def test_sync_order(self):
         ## A new member joins its bridge-domain before its tags are rewritten.
         planner = Planner(config({}))
